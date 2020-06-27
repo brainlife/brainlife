@@ -1,4 +1,7 @@
 # brainlife
+
+![](https://raw.githubusercontent.com/brainlife/brainlife/master/images/logo.png)
+
 Free cloud platform for secure neuroscience data analysis.
 
 ## What is Brainlife?
