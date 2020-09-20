@@ -1,6 +1,7 @@
-![brainlife.io](https://raw.githubusercontent.com/brainlife/brainlife/master/images/logo.png)
 
-Free cloud platform for secure neuroscience data analysis.
+# Free cloud platform for secure neuroscience data analysis.
+
+![brainlife.io](https://user-images.githubusercontent.com/2119795/93723350-7fa3d980-fb63-11ea-9272-e9fb133356a4.png)
 
 ## What is Brainlife?
 
