@@ -74,7 +74,7 @@ services:
       - brainlife
 
   mongo:
-    build: ./mongo
+    image: mongo
     restart: always
     logging:
       driver: none
@@ -181,6 +181,8 @@ services:
   warehouse-ui:
     build: warehouse/ui
     command: "npm run dev"
+    depends_on:
+      - traefik
     volumes:
       - ./warehouse/ui:/apps/warehouse/ui
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
