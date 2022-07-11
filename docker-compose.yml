@@ -5,7 +5,7 @@ x-common-envvars: &common-envvars
   MONGO_URL: mongodb://amaretti:gobrain@mongo:27017/auth?authSource=admin
   RABBITMQ_URL: amqp://amaretti:gobrain@rabbitmq:5672/brainlife
 
-  # External URLs
+  # External URLs (for browser interaction)
   MAIN_URL: http://localhost:3000
   MAIN_WS_URL: ws://localhost:3000
   AUTH_API_URL: http://localhost:3000/api/auth
@@ -265,3 +265,5 @@ services:
 networks:
   brainlife:
     name: brainlife
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
