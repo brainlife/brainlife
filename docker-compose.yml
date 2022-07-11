@@ -147,7 +147,7 @@ services:
       - "traefik.http.services.amaretti.loadbalancer.server.port=12400"
 
   warehouse:
-    build: warehouse
+    build: warehouse/api
     command: "npm run start"
     <<: *common-services
     depends_on:
@@ -231,7 +231,7 @@ services:
       - "traefik.http.services.event.loadbalancer.server.port=5500"
 
   auth:
-    build: auth
+    build: auth/api
     command: "npm run start"
     <<: *common-services
     volumes:
