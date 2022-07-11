@@ -24,40 +24,44 @@ x-common-envvars: &common-envvars
   EVENT_SERVICE_WS_URL: ws://traefik:3000/api/event
 
 x-common-services: &common-services
-  depends_on:
-    redis:
-      condition: service_healthy 
-    mongo:
-      condition: service_healthy 
-    rabbitmq:
-      condition: service_healthy 
-  links:
-    - redis
-    - mongo
-    - rabbitmq
-    - traefik
+  traefik:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+  mongo:
+    condition: service_healthy
+  rabbitmq:
+    condition: service_healthy
+  rabbitmq-setup:
+    condition: service_completed_successfully
 
 services:
 
   traefik:
     image: traefik:latest
-    command: 
+    command:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=0.0.0.0:3000"
+      - "--ping"
     restart: always
-    networks:
-      - brainlife
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Access to Docker
     expose:
       - 3000
     ports:
       - "3000:3000"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 5s
+      timeout: 15s
+      retries: 10
     labels:
       - traefik.http.routers.http_catchall.rule=HostRegexp(`{any:.+}`)
       - traefik.http.routers.http_catchall.entrypoints=web
+    networks:
+      - brainlife
 
   redis:
     image: redis
@@ -94,7 +98,7 @@ services:
       - brainlife
 
   rabbitmq:
-    image: rabbitmq
+    image: rabbitmq:3-management
     command: rabbitmq-server
     expose:
       - 5672
@@ -102,7 +106,7 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment: 
+    environment:
       RABBITMQ_DEFAULT_USER: amaretti
       RABBITMQ_DEFAULT_PASS: gobrain
       RABBITMQ_DEFAULT_VHOST: brainlife
@@ -114,12 +118,33 @@ services:
     networks:
       - brainlife
 
+  rabbitmq-setup:
+    image: rabbitmq:3-management
+    restart: "no"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: >
+      sh -c "
+      rabbitmqadmin -H rabbitmq -u amaretti -p gobrain -V brainlife declare exchange name=amaretti type=topic;
+      rabbitmqadmin -H rabbitmq -u amaretti -p gobrain -V brainlife declare exchange name=auth type=topic;
+      rabbitmqadmin -H rabbitmq -u amaretti -p gobrain -V brainlife declare exchange name=warehouse type=topic;
+      rabbitmqadmin -H rabbitmq -u amaretti -p gobrain -V brainlife declare exchange name=warehouse.dataset type=topic;
+      rabbitmqadmin -H rabbitmq -u amaretti -p gobrain -V brainlife declare exchange name=warehouse.rule type=topic;
+      rabbitmqadmin -H rabbitmq -u amaretti -p gobrain -V brainlife declare exchange name=wf.instance type=topic;
+      rabbitmqadmin -H rabbitmq -u amaretti -p gobrain -V brainlife declare exchange name=wf.resource type=topic;
+      rabbitmqadmin -H rabbitmq -u amaretti -p gobrain -V brainlife declare exchange name=wf.task type=topic;
+      "
+    networks:
+      - brainlife
+
   amaretti:
     build: amaretti/api
     command: "npm run start"
-    <<: *common-services
     depends_on:
-      - auth
+      <<: *common-services
+      auth:
+        condition: service_started
     volumes:
       - ./amaretti/api:/apps/amaretti/api
       - /apps/amaretti/api/node_modules
@@ -129,8 +154,6 @@ services:
       - ./warehouse/docker/config/api:/apps/warehouse/api/config
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
       - ./event/docker/config/api:/apps/event/api/config
-    networks:
-      - brainlife
     expose:
       - 12400
     ports:
@@ -145,13 +168,16 @@ services:
       - "traefik.http.routers.amaretti.middlewares=amaretti-stripprefix"
       - "traefik.http.middlewares.amaretti-stripprefix.stripprefix.prefixes=/api/amaretti"
       - "traefik.http.services.amaretti.loadbalancer.server.port=12400"
+    networks:
+      - brainlife
 
   warehouse:
     build: warehouse/api
     command: "npm run start"
-    <<: *common-services
     depends_on:
-      - auth
+      <<: *common-services
+      auth:
+        condition: service_started
     volumes:
       - ./warehouse/api:/apps/warehouse/api
       - /apps/warehouse/api/node_modules
@@ -161,8 +187,6 @@ services:
       - ./warehouse/docker/config/api:/apps/warehouse/api/config
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
       - ./event/docker/config/api:/apps/event/api/config
-    networks:
-      - brainlife
     expose:
       - 5000
     ports:
@@ -177,6 +201,8 @@ services:
       - "traefik.http.routers.warehouse.middlewares=warehouse-stripprefix"
       - "traefik.http.middlewares.warehouse-stripprefix.stripprefix.prefixes=/api/warehouse"
       - "traefik.http.services.warehouse.loadbalancer.server.port=5000"
+    networks:
+      - brainlife
 
   warehouse-ui:
     build: warehouse/ui
@@ -187,8 +213,6 @@ services:
       - ./warehouse/ui:/apps/warehouse/ui
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
       - /apps/warehouse/ui/node_modules
-    networks:
-      - brainlife
     expose:
       - 7000
     ports:
@@ -196,17 +220,19 @@ services:
     environment:
       <<: *common-envvars
       SERVICE_AUTHORITY: 0.0.0.0:7000
-
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.warehouse-ui.rule=PathPrefix(`/`)"
       - "traefik.http.routers.warehouse-ui.entrypoints=web"
       - "traefik.http.services.warehouse-ui.loadbalancer.server.port=7000"
+    networks:
+      - brainlife
 
   event:
     build: event/api
     command: "npm run start"
-    <<: *common-services
+    depends_on:
+      <<: *common-services
     volumes:
       - ./event/api:/apps/event/api
       - /apps/event/api/node_modules
@@ -216,8 +242,6 @@ services:
       - ./warehouse/docker/config/api:/apps/warehouse/api/config
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
       - ./event/docker/config/api:/apps/event/api/config
-    networks:
-      - brainlife
     expose:
       - 5500
     ports:
@@ -232,22 +256,23 @@ services:
       - "traefik.http.routers.event.middlewares=event-stripprefix"
       - "traefik.http.middlewares.event-stripprefix.stripprefix.prefixes=/api/event"
       - "traefik.http.services.event.loadbalancer.server.port=5500"
+    networks:
+      - brainlife
 
   auth:
     build: auth/api
     command: "npm run start"
-    <<: *common-services
+    depends_on:
+      <<: *common-services
     volumes:
       - ./auth/api:/apps/auth/api
-      - /apps/auth/node_modules
+      - /apps/auth/api/node_modules
       - ./auth/docker/config/api:/apps/auth/api/config
       - ./amaretti/docker/config/api:/apps/amaretti/api/config
       - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
       - ./warehouse/docker/config/api:/apps/warehouse/api/config
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
       - ./event/docker/config/api:/apps/event/api/config
-    networks:
-      - brainlife
     expose:
       - 12000
     ports:
@@ -264,6 +289,8 @@ services:
       - "traefik.http.routers.auth.middlewares=auth-stripprefix"
       - "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/api/auth"
       - "traefik.http.services.auth.loadbalancer.server.port=12000"
+    networks:
+      - brainlife
 
 
 networks:
