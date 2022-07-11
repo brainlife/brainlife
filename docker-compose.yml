@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+
+  redis:
+    image: redis
+    restart: always
+
+  db:
+    image: mongo
+    restart: always
+
+  auth-ui:
+    image: brainlife/auth-ui:1.0
+    volumes:
+      - type: bind
+        source: ./config/auth-ui
+        target: /ui/config/
+
+  auth-api:
+    image: brainlife/auth-api:1.0
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "10203:80"
+    volumes:
+      - type: bind
+        source: ./config/auth-api
+        target: /app/config/
+
+  amaretti-api:
+    image: brainlife/amaretti-api:1.0
+    restart: always
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "10204:80"
+    volumes:
+      - type: bind
+        source: ./config/amaretti-api
+        target: /app/config/
+
+  warehouse-api:
+    image: brainlife/warehouse-api:1.0
+    restart: always
+    depends_on:
+      - db
+      - redis
+
+    ports:
+      - "10205:80"
+    volumes:
+      - type: bind
+        source: ./config/warehouse-api
+        target: /app/config/
+
+  warehouse-ui:
+    image: brainlife/warehouse-ui:1.0
+
+  nginx:
+    image: nginx
+    restart: always
+    depends_on:
+      - auth-api
+      - auth-ui
+      - warehouse-api
+      - warehouse-ui
+    ports:
+      - "80:5000"
+
