@@ -1,72 +1,267 @@
 version: "3.9"
 
+x-common-envvars: &common-envvars
+  REDIS_URL: redis://redis:6379
+  MONGO_URL: mongodb://amaretti:gobrain@mongo:27017/auth?authSource=admin
+  RABBITMQ_URL: amqp://amaretti:gobrain@rabbitmq:5672/brainlife
+
+  # External URLs
+  MAIN_URL: http://localhost:3000
+  MAIN_WS_URL: ws://localhost:3000
+  AUTH_API_URL: http://localhost:3000/api/auth
+  WAREHOUSE_API_URL: http://localhost:3000/api/warehouse
+  AMARETTI_API_URL: http://localhost:3000/api/amaretti
+  EVENT_API_URL: http://localhost:5500/api/event
+  EVENT_WS_URL: ws://localhost:5500/api/event
+
+  WAREHOUSE_UI_URL: http://localhost:7000/
+
+  # Inter-service communication
+  AUTH_SERVICE_URL: http://traefik:3000/api/auth
+  WAREHOUSE_SERVICE_URL: http://traefik:3000/api/warehouse
+  AMARETTI_SERVICE_URL: http://traefik:3000/api/amaretti
+  EVENT_SERVICE_URL: http://traefik:3000/api/event
+  EVENT_SERVICE_WS_URL: ws://traefik:3000/api/event
+
+x-common-services: &common-services
+  depends_on:
+    redis:
+      condition: service_healthy 
+    mongo:
+      condition: service_healthy 
+    rabbitmq:
+      condition: service_healthy 
+  links:
+    - redis
+    - mongo
+    - rabbitmq
+    - traefik
+
 services:
+
+  traefik:
+    image: traefik:latest
+    command: 
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=0.0.0.0:3000"
+    restart: always
+    networks:
+      - brainlife
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Access to Docker
+    expose:
+      - 3000
+    ports:
+      - "3000:3000"
+    labels:
+      - traefik.http.routers.http_catchall.rule=HostRegexp(`{any:.+}`)
+      - traefik.http.routers.http_catchall.entrypoints=web
 
   redis:
     image: redis
-    restart: always
-
-  db:
-    image: mongo
-    restart: always
-
-  auth-ui:
-    image: brainlife/auth-ui:1.0
-    volumes:
-      - type: bind
-        source: ./config/auth-ui
-        target: /ui/config/
-
-  auth-api:
-    image: brainlife/auth-api:1.0
-    restart: always
-    depends_on:
-      - db
+    expose:
+      - 6379
     ports:
-      - "10203:80"
-    volumes:
-      - type: bind
-        source: ./config/auth-api
-        target: /app/config/
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      timeout: 15s
+      retries: 10
+    networks:
+      - brainlife
 
-  amaretti-api:
-    image: brainlife/amaretti-api:1.0
+  mongo:
+    build: ./mongo
     restart: always
-    depends_on:
-      - db
-      - redis
+    logging:
+      driver: none
+    expose:
+      - 27017
     ports:
-      - "10204:80"
-    volumes:
-      - type: bind
-        source: ./config/amaretti-api
-        target: /app/config/
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: amaretti
+      MONGO_INITDB_ROOT_PASSWORD: gobrain
+    healthcheck:
+      test: ["CMD","mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 15s
+      retries: 10
+    networks:
+      - brainlife
 
-  warehouse-api:
-    image: brainlife/warehouse-api:1.0
-    restart: always
-    depends_on:
-      - db
-      - redis
-
+  rabbitmq:
+    image: rabbitmq
+    command: rabbitmq-server
+    expose:
+      - 5672
+      - 15672
     ports:
-      - "10205:80"
+      - "5672:5672"
+      - "15672:15672"
+    environment: 
+      RABBITMQ_DEFAULT_USER: amaretti
+      RABBITMQ_DEFAULT_PASS: gobrain
+      RABBITMQ_DEFAULT_VHOST: brainlife
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 15s
+      retries: 10
+    networks:
+      - brainlife
+
+  amaretti:
+    build: amaretti
+    command: "npm run start"
+    <<: *common-services
+    depends_on:
+      - auth
     volumes:
-      - type: bind
-        source: ./config/warehouse-api
-        target: /app/config/
+      - ./amaretti:/apps/amaretti
+      - ./auth/docker/config/api:/apps/auth/api/config
+      - ./amaretti/docker/config/api:/apps/amaretti/api/config
+      - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
+      - ./warehouse/docker/config/api:/apps/warehouse/api/config
+      - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
+      - /apps/amaretti/api/node_modules
+      - /apps/amaretti/ui/node_modules
+    networks:
+      - brainlife
+    expose:
+      - 12400
+    ports:
+      - "12400:12400"
+    environment:
+      <<: *common-envvars
+      SERVICE_AUTHORITY: 0.0.0.0:12400
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.amaretti.rule=PathPrefix(`/api/amaretti`)"
+      - "traefik.http.routers.amaretti.entrypoints=web"
+      - "traefik.http.routers.amaretti.middlewares=amaretti-stripprefix"
+      - "traefik.http.middlewares.amaretti-stripprefix.stripprefix.prefixes=/api/amaretti"
+      - "traefik.http.services.amaretti.loadbalancer.server.port=12400"
+
+  warehouse:
+    build: warehouse
+    command: "npm run start"
+    <<: *common-services
+    depends_on:
+      - auth
+    volumes:
+      - ./warehouse:/apps/warehouse
+      - ./auth/docker/config/api:/apps/auth/api/config
+      - ./amaretti/docker/config/api:/apps/amaretti/api/config
+      - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
+      - ./warehouse/docker/config/api:/apps/warehouse/api/config
+      - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
+      - /apps/warehouse/api/node_modules
+      - /apps/warehouse/ui/node_modules
+    networks:
+      - brainlife
+    expose:
+      - 5000
+    ports:
+      - "5000:5000"
+    environment:
+      <<: *common-envvars
+      SERVICE_AUTHORITY: 0.0.0.0:5000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.warehouse.rule=PathPrefix(`/api/warehouse`)"
+      - "traefik.http.routers.warehouse.entrypoints=web"
+      - "traefik.http.routers.warehouse.middlewares=warehouse-stripprefix"
+      - "traefik.http.middlewares.warehouse-stripprefix.stripprefix.prefixes=/api/warehouse"
+      - "traefik.http.services.warehouse.loadbalancer.server.port=5000"
 
   warehouse-ui:
-    image: brainlife/warehouse-ui:1.0
-
-  nginx:
-    image: nginx
-    restart: always
-    depends_on:
-      - auth-api
-      - auth-ui
-      - warehouse-api
-      - warehouse-ui
+    build: warehouse/ui
+    command: "npm run dev"
+    volumes:
+      - ./warehouse/ui:/apps/warehouse/ui
+      - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
+      - /apps/warehouse/ui/node_modules
+    networks:
+      - brainlife
+    expose:
+      - 7000
     ports:
-      - "80:5000"
+      - "7000:7000"
+    environment:
+      <<: *common-envvars
+      SERVICE_AUTHORITY: 0.0.0.0:7000
 
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.warehouse-ui.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.warehouse-ui.entrypoints=web"
+      - "traefik.http.services.warehouse-ui.loadbalancer.server.port=7000"
+
+  event:
+    build: event
+    command: "npm run start"
+    <<: *common-services
+    volumes:
+      - ./event:/apps/event
+      - ./auth/docker/config/api:/apps/auth/api/config
+      - ./amaretti/docker/config/api:/apps/amaretti/api/config
+      - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
+      - ./warehouse/docker/config/api:/apps/warehouse/api/config
+      - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
+      - /apps/event/node_modules
+    networks:
+      - brainlife
+    expose:
+      - 5500
+    ports:
+      - "5500:5500"
+    environment:
+      <<: *common-envvars
+      SERVICE_AUTHORITY: 0.0.0.0:5500
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.event.rule=PathPrefix(`/api/event`)"
+      - "traefik.http.routers.event.entrypoints=web"
+      - "traefik.http.routers.event.middlewares=event-stripprefix"
+      - "traefik.http.middlewares.event-stripprefix.stripprefix.prefixes=/api/event"
+      - "traefik.http.services.event.loadbalancer.server.port=5500"
+
+  auth:
+    build: auth
+    command: "npm run start"
+    <<: *common-services
+    volumes:
+      - ./auth:/apps/auth
+      - ./auth/docker/config/api:/apps/auth/api/config
+      - ./amaretti/docker/config/api:/apps/amaretti/api/config
+      - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
+      - ./warehouse/docker/config/api:/apps/warehouse/api/config
+      - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
+      - /apps/auth/node_modules
+    networks:
+      - brainlife
+    expose:
+      - 12000
+    ports:
+      - "12000:12000"
+    env_file:
+      - .env
+    environment:
+      <<: *common-envvars
+      SERVICE_AUTHORITY: 0.0.0.0:12000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.auth.entrypoints=web"
+      - "traefik.http.routers.auth.middlewares=auth-stripprefix"
+      - "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/api/auth"
+      - "traefik.http.services.auth.loadbalancer.server.port=12000"
+
+
+networks:
+  brainlife:
+    name: brainlife
