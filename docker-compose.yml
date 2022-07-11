@@ -121,14 +121,14 @@ services:
     depends_on:
       - auth
     volumes:
-      - ./amaretti:/apps/amaretti
+      - ./amaretti/api:/apps/amaretti/api
+      - /apps/amaretti/api/node_modules
       - ./auth/docker/config/api:/apps/auth/api/config
       - ./amaretti/docker/config/api:/apps/amaretti/api/config
       - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
       - ./warehouse/docker/config/api:/apps/warehouse/api/config
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
-      - /apps/amaretti/api/node_modules
-      - /apps/amaretti/ui/node_modules
+      - ./event/docker/config/api:/apps/event/api/config
     networks:
       - brainlife
     expose:
@@ -153,14 +153,14 @@ services:
     depends_on:
       - auth
     volumes:
-      - ./warehouse:/apps/warehouse
+      - ./warehouse/api:/apps/warehouse/api
+      - /apps/warehouse/api/node_modules
       - ./auth/docker/config/api:/apps/auth/api/config
       - ./amaretti/docker/config/api:/apps/amaretti/api/config
       - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
       - ./warehouse/docker/config/api:/apps/warehouse/api/config
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
-      - /apps/warehouse/api/node_modules
-      - /apps/warehouse/ui/node_modules
+      - ./event/docker/config/api:/apps/event/api/config
     networks:
       - brainlife
     expose:
@@ -204,17 +204,18 @@ services:
       - "traefik.http.services.warehouse-ui.loadbalancer.server.port=7000"
 
   event:
-    build: event
+    build: event/api
     command: "npm run start"
     <<: *common-services
     volumes:
-      - ./event:/apps/event
+      - ./event/api:/apps/event/api
+      - /apps/event/api/node_modules
       - ./auth/docker/config/api:/apps/auth/api/config
       - ./amaretti/docker/config/api:/apps/amaretti/api/config
       - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
       - ./warehouse/docker/config/api:/apps/warehouse/api/config
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
-      - /apps/event/node_modules
+      - ./event/docker/config/api:/apps/event/api/config
     networks:
       - brainlife
     expose:
@@ -237,13 +238,14 @@ services:
     command: "npm run start"
     <<: *common-services
     volumes:
-      - ./auth:/apps/auth
+      - ./auth/api:/apps/auth/api
+      - /apps/auth/node_modules
       - ./auth/docker/config/api:/apps/auth/api/config
       - ./amaretti/docker/config/api:/apps/amaretti/api/config
       - ./amaretti/docker/config/ui:/apps/amaretti/ui/config
       - ./warehouse/docker/config/api:/apps/warehouse/api/config
       - ./warehouse/docker/config/ui:/apps/warehouse/ui/config
-      - /apps/auth/node_modules
+      - ./event/docker/config/api:/apps/event/api/config
     networks:
       - brainlife
     expose:
