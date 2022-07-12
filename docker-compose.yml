@@ -140,7 +140,7 @@ services:
 
   amaretti:
     build: amaretti/api
-    command: "npm run start"
+    command: "npm run dev"
     depends_on:
       <<: *common-services
       auth:
@@ -173,7 +173,7 @@ services:
 
   warehouse:
     build: warehouse/api
-    command: "npm run start"
+    command: "npm run dev"
     depends_on:
       <<: *common-services
       auth:
@@ -230,7 +230,7 @@ services:
 
   event:
     build: event/api
-    command: "npm run start"
+    command: "npm run dev"
     depends_on:
       <<: *common-services
     volumes:
@@ -261,7 +261,7 @@ services:
 
   auth:
     build: auth/api
-    command: "npm run start"
+    command: "npm run dev"
     depends_on:
       <<: *common-services
     volumes:
