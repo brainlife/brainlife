@@ -1,6 +1,4 @@
 
-# Free cloud platform for secure neuroscience data analysis.
-
 <img width="1378" alt="image" src="https://user-images.githubusercontent.com/2119795/187248731-196fd4ad-36ef-4f81-a8d6-fc00dab73564.png">
 
 ## What is Brainlife?
