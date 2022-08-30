@@ -1,0 +1,4 @@
+#!/bin/bash
+path=${1/./\/}
+printf '%s' "-fstype=ratarmount :/archive/$path.tar"
+

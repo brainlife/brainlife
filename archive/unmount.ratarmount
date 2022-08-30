@@ -1,0 +1,3 @@
+#!/bin/sh
+fusermount -u $1
+

@@ -1,72 +1,224 @@
-version: "3.9"
+version: "3"
 
 services:
 
   redis:
-    image: redis
-    restart: always
+    image: redis:7.0.2
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
-  db:
-    image: mongo
-    restart: always
+  mongodb:
+    image: mongo:4.4.15
+    volumes: 
+      - ./volumes/mongodb:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    ports:
+      - 27017:27017 #for local debuggin
 
-  auth-ui:
-    image: brainlife/auth-ui:1.0
+  rabbitmq:
+    image: rabbitmq:3.10.5-management
+    environment:
+      - RABBITMQ_DEFAULT_VHOST=brainlife
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 15s
+      timeout: 10s
+      retries: 5
     volumes:
-      - type: bind
-        source: ./config/auth-ui
-        target: /ui/config/
+      - ./volumes/rabbitmq/:/var/lib/rabbitmq/
 
   auth-api:
-    image: brainlife/auth-api:1.0
-    restart: always
-    depends_on:
-      - db
-    ports:
-      - "10203:80"
+    build: auth
     volumes:
-      - type: bind
-        source: ./config/auth-api
-        target: /app/config/
+      - ./auth:/app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+
+  event-api:
+    build: event
+    volumes:
+      - ./event:/app
+    depends_on:
+      auth-api:
+        condition: service_healthy
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
 
   amaretti-api:
-    image: brainlife/amaretti-api:1.0
-    restart: always
-    depends_on:
-      - db
-      - redis
-    ports:
-      - "10204:80"
+    build: amaretti
     volumes:
-      - type: bind
-        source: ./config/amaretti-api
-        target: /app/config/
+      - ./amaretti:/app
+    depends_on:
+      event-api:
+        condition: service_healthy
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    command: pm2 start ./api/amaretti.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  amaretti-task-rule:
+    build: amaretti
+    volumes:
+      - ./amaretti:/app
+    depends_on:
+      event-api:
+        condition: service_healthy
+    command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  amaretti-task-ui:
+    build: amaretti
+    volumes:
+      - ./amaretti:/app
+    depends_on:
+      event-api:
+        condition: service_healthy
+    command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules" -- --nonice
+
+# this runs synchronously (how?)
+#  amaretti-resource:
+#    build: amaretti
+#    volumes:
+#      - ./amaretti:/app
+#    depends_on:
+#      event-api:
+#        condition: service_healthy
+#    command: pm2 start ./bin/resource.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  amaretti-workdir:
+    build: amaretti
+    volumes:
+      - ./amaretti:/app
+    depends_on:
+      event-api:
+        condition: service_healthy
+    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-api:
-    image: brainlife/warehouse-api:1.0
-    restart: always
-    depends_on:
-      - db
-      - redis
-
-    ports:
-      - "10205:80"
+    build: warehouse
     volumes:
-      - type: bind
-        source: ./config/warehouse-api
-        target: /app/config/
+      - ./warehouse:/app
+      - ./volumes/archive:/archive:ro
+      - ./volumes/secondary:/secondary:ro
+    depends_on:
+      amaretti-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    command: pm2 start ./api/warehouse.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  warehouse-rule:
+    build: warehouse
+    volumes:
+      - ./warehouse:/app
+    depends_on:
+      amaretti-api:
+        condition: service_healthy
+    command: pm2 start ./bin/rule_handler.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  warehouse-events:
+    build: warehouse
+    volumes:
+      - ./warehouse:/app
+    depends_on:
+      amaretti-api:
+        condition: service_healthy
+    command: pm2 start ./bin/event_handler.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  auth-ui:
+    build: ./auth/ui
+    volumes:
+      - ./auth/ui:/ui
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:3000"]
 
   warehouse-ui:
-    image: brainlife/warehouse-ui:1.0
+    build: ./warehouse/ui
+    volumes:
+      - ./warehouse/ui:/ui
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   nginx:
-    image: nginx
-    restart: always
+    image: nginx:1.18
+    restart:
+      always
     depends_on:
-      - auth-api
-      - auth-ui
-      - warehouse-api
-      - warehouse-ui
+      amaretti-api:
+        condition: service_healthy
+      warehouse-api:
+        condition: service_healthy
+      auth-api:
+        condition: service_healthy
+      warehouse-ui:
+        condition: service_healthy
+      auth-ui:
+        condition: service_healthy
+    volumes:
+      - ./config/nginx/home:/home
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "80:5000"
+      - 8080:80
+
+  archive:
+    build: ./archive
+    privileged: true #needed by singularity
+    volumes:
+      - ./archive/.ssh:/home/brainlife/.ssh:ro
+      - ./volumes/archive:/archive
+      - ./volumes/stage:/stage
+      - ./volumes/secondary:/secondary
+      - ./volumes/singularity:/home/brainlife/.singularity
+      - /etc/timezone:/etc/timezone #needed by singularity
+      - /etc/localtime:/etc/localtime #needed by singularity
+    #ports:
+    #  - 22:22
+
+  upload:
+    build: ./upload
+    privileged: true #needed by singularity
+    volumes:
+      - ./upload/.ssh:/home/brainlife/.ssh:ro
+      - ./volumes/upload:/upload
+      - ./volumes/ezbids:/ezbids
+      - ./volumes/singularity:/home/brainlife/.singularity
+      - /etc/timezone:/etc/timezone #needed by singularity
+      - /etc/localtime:/etc/localtime #needed by singularity
+    #ports:
+    #  - 22:22
+
+  compute:
+    build: ./compute
+    privileged: true #needed by singularity
+    volumes:
+      - ./compute/.ssh:/home/brainlife/.ssh:ro
+      - ./volumes/compute:/scratch
+      - ./volumes/singularity:/home/brainlife/.singularity
+      - /etc/timezone:/etc/timezone #needed by singularity
+      - /etc/localtime:/etc/localtime #needed by singularity
+    #ports:
+    #  - 22:22
+
+
+#volumes:
+#  mongodb:
+#    driver: local
 

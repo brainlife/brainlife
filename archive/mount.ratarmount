@@ -1,0 +1,4 @@
+#!/bin/sh
+#ratarmount $1 $2 --fuse $4
+ratarmount $1 $2 --fuse "ro,allow_other"
+

@@ -1,0 +1,15 @@
+[submodule "auth"]
+	path = auth
+	url = https://github.com/brainlife/auth
+[submodule "event"]
+	path = event
+	url = https://github.com/brainlife/event
+[submodule "amaretti"]
+	path = amaretti
+	url = https://github.com/brainlife/amaretti
+[submodule "warehouse"]
+	path = warehouse
+	url = https://github.com/brainlife/warehouse
+[submodule "ezbids"]
+	path = ezbids
+	url = https://github.com/brainlife/ezbids
