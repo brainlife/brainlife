@@ -1,7 +1,7 @@
 
 <img width="1378" alt="image" src="https://user-images.githubusercontent.com/2119795/187248731-196fd4ad-36ef-4f81-a8d6-fc00dab73564.png">
 
-## What is Brainlife?
+# What is Brainlife?
 
 Brainlife is a free and open source platform for neuroscience data management. The project promotes engagement and education in FAIR and reproducible neuroscience.
 
@@ -16,7 +16,11 @@ You will need to have an environment with the following software packages
 * docker / docker-compose
 * git
 
+Currently, you can only run the local dev instance on Linux based machines. 
+
 ### docker-compose versions
+
+Please make sure that you have the correct docker-compose version installed
 
 ```
 docker-compose version
