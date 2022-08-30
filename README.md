@@ -1,13 +1,11 @@
 
-# Free cloud platform for secure neuroscience data analysis.
-
-![brainlife.io](https://user-images.githubusercontent.com/2119795/93723350-7fa3d980-fb63-11ea-9272-e9fb133356a4.png)
+<img width="1378" alt="image" src="https://user-images.githubusercontent.com/2119795/187248731-196fd4ad-36ef-4f81-a8d6-fc00dab73564.png">
 
 ## What is Brainlife?
 
-Brainlife promotes engagement and education in reproducible neuroscience. We do this by providing an online platform where users can publish code (Apps), Data, and make it "alive" by integragrate various HPC and cloud computing resources to run those Apps. 
+Brainlife is a free and open source platform for neuroscience data management. The project promotes engagement and education in FAIR and reproducible neuroscience.
 
-Brainlife also provide mechanisms to publish all research assets associated with a scientific project (data and analyses) embedded in a cloud computing environment and referenced by a single digital-object-identifier (DOI). The platform is unique because of its focus on supporting scientific reproducibility beyond open code and open data, by providing fundamental smart mechanisms for what we refer to as “Open Services.” 
+Brainlife is a single integrative interface to manage, visualize, preprocess and analyze data (fMRI, dMRI, anatomical MRI, EEG and MEG). THe platform also allows to publish all research assets associated with a scientific project (data, preprocessing services and data analysis notebooks) in a single record addressed by a digital-object-identifier (DOI). The platform is unique because of its focus on supporting scientific reproducibility beyond open code and open data, by providing fundamental smart mechanisms for what we refer to as “Open Services.” 
 
 # Running brainlife Development Instance
 
@@ -50,5 +48,4 @@ You can also login as guest user by entering user:guest password:guest123
 
 # Funding
 
-This research was supported by NSF OAC-1916518, NSF IIS-1912270, NSF, IIS-1636893, NSF BCS-1734853, NIH 1R01EB029272-01, a Microsoft Research Award, A Microsoft Investigator Fellowship.
-
+This research was supported by NSF OAC-1916518, NSF IIS-1912270, NSF, IIS-1636893, NSF BCS-1734853, NIH 1R01EB029272-01, a Microsoft Research Award, A Microsoft Investigator Fellowship to Franco Pestilli
