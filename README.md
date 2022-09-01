@@ -42,6 +42,8 @@ Then launch the dev stack (with auto-code watching) by
 ./dev.sh
 ```
 
+### populate database with test accounts / data
+
 Once all services starts up, you can open your browser to access the warehouse UI at `https://localhost:8080`. If this is the first time you are running the dev instance, you can insert some database records by running `./populatedb.sh`. This inserts the following collections.
 
 * auth - user/group
