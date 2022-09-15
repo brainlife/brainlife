@@ -67,6 +67,15 @@ Once all services starts up, you can open your browser to access the warehouse U
 You can then login as administrator by entering user:admin password:admin123. 
 You can also login as guest user by entering user:guest password:guest123
 
+## TODO
+
+The following functionalities are not yet implemented by this local dev instance
+
+* Group Analysis (jupyter notebook)
+* Dataset/Datalad import
+* Pipeline rules are not yet fully tested
+* Publication / datacite integration
+
 # Funding
 
 This research was supported by NSF OAC-1916518, NSF IIS-1912270, NSF, IIS-1636893, NSF BCS-1734853, NIH 1R01EB029272-01, a Microsoft Research Award, A Microsoft Investigator Fellowship to Franco Pestilli
