@@ -9,9 +9,11 @@ set -ex
 #check files that developers should provide
 if [ ! -f warehouse/api/config/github.access_token ]; then
   echo "Please create warehouse/api/config.github.access_token from https://github.com/settings/tokens"
+  exit 1
 fi
 if [ ! -f amaretti/config/github.access_token ]; then
-  echo "Please create warehouse/api/config.github.access_token from https://github.com/settings/tokens"
+  echo "Please create amaretti/config/github.access_token from https://github.com/settings/tokens"
+  exit 1
 fi
 
 #setup volume directories that needs to be non-root
@@ -89,6 +91,7 @@ fi
   cd event/api/config
   if [ ! -f event.jwt ]; then
     #TODO - I need to run this inside running auth api container so it can connect to the DB?
+    export OPENSSL_CONF=/dev/null #prevent an odd module load issue
     ../../../auth/bin/auth.js issue --scopes '{ "sca": ["admin"] }' --sub 'event' > event.jwt
   fi
 )
