@@ -34,3 +34,18 @@
 [submodule "ui/volumeviewer"]
 	path = ui/volumeviewer
 	url = https://github.com/brainlife/ui-volumeviewer.git
+[submodule "ui/papaya"]
+	path = ui/papaya
+	url = https://github.com/brainlife/ui-papaya.git
+[submodule "ui/nnview"]
+	path = ui/nnview
+	url = https://github.com/brainlife/ui-networkneuro-tracts
+[submodule "ui/surfaces"]
+	path = ui/surfaces
+	url = https://github.com/brainlife/ui-3dsurfaces.git
+[submodule "ui/tractview"]
+	path = ui/tractview
+	url = https://github.com/brainlife/ui-tractview.git
+[submodule "ui/lifeview"]
+	path = ui/lifeview
+	url = https://github.com/brainlife/ui-lifeview.git
