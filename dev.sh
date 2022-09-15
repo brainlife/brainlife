@@ -32,8 +32,9 @@ hash docker-compose
 #sudo chown 1000:1000 archive/.ssh
 #sudo chown 1000:1000 upload/.ssh
 
-if [ ! -f /tmp/.X11-unix/X* ]; then
-  echo "Can't find /tmp/.X11-unix/X* - vis server needs X server." 
+if [ ! -d /tmp/.X11-unix ]; then
+  echo "Can't find /tmp/.X11-unix - vis server needs X server." 
+  exit
 fi
 
 ###################################################################
