@@ -30,27 +30,46 @@ hash docker-compose
 #sudo chown 1000:1000 archive/.ssh
 #sudo chown 1000:1000 upload/.ssh
 
+if [ ! -f /tmp/.X11-unix/X* ]; then
+  echo "Can't find /tmp/.X11-unix/X* - vis server needs X server." 
+fi
+
+###################################################################
+#
+# install ui packages
+#
+for ui in $(ls ui); do
+  if [ ! -d ui/$ui/node_modules ]; then
+    (cd ui/$ui && npm install && npm update)
+  fi
+done
+
+#build tractview dist
+if [ ! -d ui/tractview/dist ]; then
+  (cd ui/tractview && npm run build)
+fi
+
 ###################################################################
 #
 # install all npm packages
 #
 #authentication service api
-(cd auth && npm install)
+[ ! -d auth/node_modules ] && (cd auth && npm install)
 
 #authentication service web ui
-(cd auth/ui && npm install)
+[ ! -d auth/ui/node_modules ] && (cd auth/ui && npm install)
 
 #amaretti service api
-(cd amaretti && npm install)
+[ ! -d amaretti/node_modules ] && (cd amaretti && npm install)
 
 #event service
-(cd event && npm install)
+[ ! -d event/node_modules ] && (cd event && npm install)
 
 #warehouse service api
-(cd warehouse && npm install)
+[ ! -d warehouse/node_modules ] && (cd warehouse && npm install)
 
 #warehouse web ui
-(cd warehouse/ui && npm install)
+[ ! -d warehouse/ui/node_modules ] && (cd warehouse/ui && npm install)
 
 ###################################################################
 #

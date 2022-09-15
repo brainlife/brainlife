@@ -13,3 +13,24 @@
 [submodule "ezbids"]
 	path = ezbids
 	url = https://github.com/brainlife/ezbids
+[submodule "vis/volumeviewer"]
+	path = vis/volumeviewer
+	url = https://github.com/brainlife/ui-volumeviewer.git
+[submodule "vis/lifeview"]
+	path = vis/lifeview
+	url = https://github.com/brainlife/ui-lifeview.git
+[submodule "vis/tractview"]
+	path = vis/tractview
+	url = https://github.com/brainlife/ui-tractview
+[submodule "vis/surfaces"]
+	path = vis/surfaces
+	url = https://github.com/brainlife/ui-3dsurfaces
+[submodule "vis/nnview"]
+	path = vis/nnview
+	url = https://github.com/brainlife/ui-networkneuro-tracts
+[submodule "vis/papaya"]
+	path = vis/papaya
+	url = https://github.com/brainlife/ui-papaya.git
+[submodule "ui/volumeviewer"]
+	path = ui/volumeviewer
+	url = https://github.com/brainlife/ui-volumeviewer.git

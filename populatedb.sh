@@ -259,7 +259,7 @@ bulk.find({_id: ObjectId("630933e44c93b6d2054ce6a3")}).upsert().updateOne({
   "update_date" : ISODate("2022-08-26T16:58:12.493-04:00"),
   "user_id" : "1",
   "status" : "ok",
-  "status_msg" : "Error: All configured authentication methods failed",
+  "status_msg" : "setup by populate script",
   "status_update" : ISODate("2022-08-26T16:58:15.729-04:00")
 });
 bulk.find({_id: ObjectId("630ac28329c0b4168849e6a6")}).upsert().updateOne({
@@ -289,10 +289,49 @@ bulk.find({_id: ObjectId("630ac28329c0b4168849e6a6")}).upsert().updateOne({
   "create_date" : ISODate("2022-08-27T21:18:59.879-04:00"),
   "update_date" : ISODate("2022-08-27T21:18:59.879-04:00"),
   "user_id" : "1",
-  "status" : "failed",
-  "status_msg" : "failed to stream resource_test.sh",
+  "status" : "ok",
+  "status_msg" : "setup by populate script",
   "status_update" : ISODate("2022-08-27T21:19:02.521-04:00")
 });
+
+bulk.find({_id: ObjectId("631a844d03e55d25180d2873")}).upsert().updateOne({
+    "admins" : [
+        "1"
+    ],
+    "active" : true,
+    "name" : "Visualization Server",
+    "avatar" : "",
+    "config" : {
+        "desc" : "Server used to run novnc service",
+        "services" : [
+            {
+                "name" : "brainlife/abcd-novnc",
+                "score" : NumberInt(10)
+            }
+        ],
+        "maxtask" : NumberInt(4),
+        "ssh_public" : "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDHHeKXEw4rFkIUORcxq5g0qkA5Qh/MWfuSjDpkIrTv0b3nzyeXmDw+2QjgN7ufSsBmBsHkZDRmUg8KzmpCw8EqqDXG7GmK9Rxv1pbxHf3rmHPE2LeOAWvrfp6m1yrV9y6aGLSu/At5Gxlus3IDts+qKeWN5wXlvV/uFbq7BNmXlHEuyou3tFeslKTVB/TsF1Pzu72eA+yoUxZkN3Vg+ovMnf9AyiDRLMXEYTeeUXuuqXmKZJc+BKfm4nOydXB/fvnNcQoe09xGH+WLwV3AOkwDXgzkiKAiJddIfGNeg7p9c7w2LYDjQQUL8/q6gxTEQD+6sGsj734HZJPghuclHCpR ",
+        "enc_ssh_private" : "3b27a370fb219a7f8b67bce54a050fd701ca2ebb3db1ab85065f5d2167b5b6fe6c4d566c36f67a9ad45e9e25f8468c2b986975f382da825d3c14269aea8abd1b4cfb78eee54ab30ff3f413b18bd55da10a2056aa9052a95cd479c726503c432be84612dcc20464c083ab3bac3b1a273f54afb4de3ef04f645cf90b11f9fbe5127cb7d6c1e1af9c6ca4cbf0097f33b0bc905da3cca45b00c28826ea7ea30b8665067a94023325b056a9b5ff7f5293b6262a24708b5ed8457b9039aa9ef18208904a3c5ddab2029e2736b44ce26d3374b3ed5b862a0cc9d2f3449f30b98d1add9ea0f9b388dd21e5b8fec9e04e735bb76fb3932bea2f7a997dbc74d6351a9ae050576cabf41adb424f9d4d02fd1d6c10a231f98c0e2419f985f2fb10a99d86f5ff541aacb07486b93454e3d8f8795859b1185f22bc57ef681386d28b286f796b20b76533bc18121da6b9e2761a60a05ae69135c6fa31b6d8386d113045decd313339b153beace85385f662ded0ae37f36a1003cdc8bc151188ebb750b82e344947df6a455130eb70be5e982a1b9ed9eab751671016b6dfdb98ddb56c73b3241d6da566d5f4343dd7889e34ced9696790b724572d8ea3aa43b6722c98546f69af074dc15cf0a7dbbc12d7774464eb0e1768196c5c1aed4eb91d0aaa6313a11733b29e74541eda71ae04b2a47e9134bdd5e15b6aa13fc557cd1d8fd2186e662f7a77b0d5612cf1d592a2cbcd7d95039dacb7fa570e9489e47665546909fb72b5b6ba28e4a3c16671db2254952b84b3b4f4c4bd4e7518f4472fd3c080f1a421ee242a347354ebf717c611ce4703abe304f3f313bf97ee525c20b2f85befc552b17059969408ef6edb4b11dead13356735610ae0f30f0638626a37cec4dd3dd9c5179d4fddf36bf288fd336627256034dfff8467c75c92275ebfdb2d4c83f130c7698d4ef0108d312a00cc680e88feba1b1aa4f17a278cca4e12edd599851d03d9dd47e8e7650ae945a23d2abea2e948c20c700a06610dde89dedce15e2c4e1712682f3b2a2a721a1bd198c0e8705d649d6727d1217de8fce85d87b5388e944a62f53cba8e2e17b582e11d8cd242c298b4e8c6e89171c3d3423e6fe8d8a174e619abf2619e96e99462c50a8d9b03cc70bc72a478783768a03d75f1c9ff719414c9f6d051b460326ad2be67b4193700fbc09f2b8fc0b66ec24330b2a38bb24e21a9de75c712b5ffeda18b3ecf3420dad806a37f222c35b5c215835d70f9ecc97bb7bc85f1a2b53eb6a8ae28fdc197361e5901290fe5c905e357d022f923aecbd8974988c3373bc9841205254debd4a75703ff12a60a278d371d070d0f7be03829390f8d20fa057882f6a64222f1e86488faea701e7c8706432b44c1cca276e739a912435e2a1af1e2a500edbeb25f602327308104b3dfa1f68f2b928bb06de7091fae7b1e7d74841a54919f10cfd860567f6980d38a76ff6887b5e66cbe72cb3a3293bb092d15ed5f32edc81ee725b1e0f36c4253c6f2d5bf77de9ddca8dbcd2e30ae412ad6f6066101a8ad5b654ef501837dabb356cfe87d781dcabef69f83ede7b6d428c3f279936a646a9cf3c29ea7661137c8d6e02050a0d5689bccf50746f9c99f5f18aa3371b7140b3b1ed01f3eef069731c7eb8d68a87b1b772d3454fd93b7130245779799886c5ec0966fdeb31cccc8ad1edcc9eaef0629426febf1c4ae7a7084626b2860dbd1e42aedef22136eb556d1260bd301977a269af1d00bf026433025d61d4ec15222e0a1f63203e3cbbc9a0072242532845e29f8e80f098e4facb49341b8f98452ae21e8aa77620e35ca8bc963e585fe50ef6f19c55e7885f52dbe10729c8668aef17dc114f7642c6dd66bee8f09d035f6efd41991d3f05f4c2e8d1ae3e4a2a6549f4f7b06ebc3d1d1d47f0081e3c485a5a93704c5b87b725a20371a971280d3ead05e4b49b4c7ef882788f5eb5eae3cef154719791e2ac3b6a502fe1ad949a03a9feb100266f3c912f72adce3afb2f90b965e0b0d872ac24e52e10a41bce57de340f512ed90ef0dc2d5d6163195d25746131d349ca6739ed0df0c03a5f959b88f6f4a8e69052fa7ccad3d1291fa6bebc1359f4a7c00a86dbabd3f6ac63913e43d7ec8c1e9c93c7a37836b389466fec12eca076c781aefabb52c56f26cedf5f4a0398eb9a3abc8b1af93e388231e1faf57346a49decb11353d28b775a0e407546e080ed3eb9df4909231b62fc6dbb0a4da2a8e973d4bfe5ffc7505688bbe0c224666fb76f2473b719010fc141c4d8c22c19be8da39158d3c17ecd86c32977176a11427a9d12656582eab59b962c4fe1bb9e0d3f6ae2184d6d4960ced9013329b22127ada30781bbd747e6661e264dbb87d3e1cf39a26049d0dfa1882c0b8742149c7538371f6b39ea258fa",
+        "username" : "root",
+        "hostname" : "brainlife_vis_1",
+        "workdir" : "/scratch"
+    },
+    "gids" : [
+        NumberInt(1)
+    ],
+    "stats" : {
+        "recent_job_counts" : [
+
+        ]
+    },
+    "create_date" : ISODate("2022-09-09T00:09:49.474+0000"),
+    "update_date" : ISODate("2022-09-09T00:09:49.474+0000"),
+    "user_id" : "1",
+    "status" : "ok",
+    "status_msg" : "setup by populate script",
+    "status_update" : ISODate("2022-09-09T00:16:57.592+0000")
+});
+
 bulk.execute();
 
 db.resources.find().pretty();

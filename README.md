@@ -9,14 +9,29 @@ Brainlife is a single integrative interface to manage, visualize, preprocess and
 
 # Running brainlife Development Instance
 
+!! This is still a WIP
+
 ## Prerequisite
 
 You will need to have an environment with the following software packages
 
-* docker / docker-compose
+* docker / docker-compose 
 * git
 
-Currently, you can only run the local dev instance on Linux based machines. 
+```
+apt install docker-compose golang-docker-credential-helpers
+```
+
+## Prerequisite for gpu enabled novnc sessions
+
+Not all novnc vis apps require GPU, but if you have nvidia gpu on your local machine, you should be
+able to launch it by having these tools installed
+
+* vglserver (run vglserver_config and allow all access)
+* nvidia-docker2 (required to run vis app with `--gpus all` option. See https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#installing-on-ubuntu-and-debian
+
+The vis/Dockerfile installs specific version of libnvidia drivers. I believe the version must match with the
+version of the driver installed on your host or vglrun won't work.
 
 ### docker-compose versions
 
