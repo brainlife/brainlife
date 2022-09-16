@@ -28,7 +28,7 @@ RUN mkdir -p /run/sshd
 #
 # for staging
 # 
-RUN apt install -y autofs python3-pip python3 fuse sqlite3 unar
+RUN apt update && apt install -y autofs python3-pip python3 fuse sqlite3 unar
 RUN pip install ratarmount
 COPY mount.ratarmount /sbin/mount.ratarmount
 COPY unmount.ratarmount /sbin/unmount.ratarmount

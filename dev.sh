@@ -33,7 +33,7 @@ hash docker-compose
 #sudo chown 1000:1000 upload/.ssh
 
 if [ ! -d /tmp/.X11-unix ]; then
-  echo "Can't find /tmp/.X11-unix - vis server needs X server." 
+  echo "Can't find /tmp/.X11-unix - vis server needs X server (like Xquartz)." 
   exit
 fi
 
