@@ -45,7 +45,7 @@ RUN mkdir -p /run/sshd
 
 #for glx libs
 #TODO - 470 needs to match the version of nvidia driver installed on host?
-RUN apt install -y libgl1-mesa-dev mesa-utils nvidia-utils-470 libnvidia-gl-470
+RUN apt update && apt install -y libgl1-mesa-dev mesa-utils nvidia-utils-470 libnvidia-gl-470
 
 #COPY virtualgl_2.6_amd64.deb /tmp/virtualgl_2.6_amd64.deb
 #RUN dpkg -i /tmp/virtualgl_2.6_amd64.deb

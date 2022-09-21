@@ -10,6 +10,24 @@ services:
       timeout: 10s
       retries: 5
 
+  influxdb:
+    image: influxdb:2.0
+    volumes:
+      - ./volumes/influxdb/:/var/lib/influxdb2/
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=brainlife
+      - DOCKER_INFLUXDB_INIT_PASSWORD=brainlife123
+      - DOCKER_INFLUXDB_INIT_ORG=brainlife
+      - DOCKER_INFLUXDB_INIT_BUCKET=brainlife
+      - DOCKER_INFLUXDB_INIT_RETENTION=1w
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mydevtoken
+    healthcheck:
+      test: ["CMD", "curl", "influxdb:8086/api/v2/ping"]
+      interval: 1m
+      timeout: 10s
+      retries: 5
+
   mongodb:
     image: mongo:4.4
     volumes: 
@@ -98,14 +116,14 @@ services:
 #        condition: service_healthy
 #    command: pm2 start ./bin/resource.js --attach --watch --ignore-watch "ui **/node_modules"
 
-  amaretti-workdir:
-    build: amaretti
-    volumes:
-      - ./amaretti:/app
-    depends_on:
-      event-api:
-        condition: service_healthy
-    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
+#  amaretti-workdir:
+#    build: amaretti
+#    volumes:
+#      - ./amaretti:/app
+#    depends_on:
+#      event-api:
+#        condition: service_healthy
+#    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-api:
     build: warehouse
