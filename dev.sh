@@ -133,5 +133,3 @@ cp warehouse/api/config/configEncrypt.key archive/.ssh
 #
 # now ready to start it up!
 docker-compose up --build
-
-

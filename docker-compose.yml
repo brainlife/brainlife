@@ -3,7 +3,11 @@ version: "3"
 services:
 
   redis:
+    container_name: brainlife_redis_1
+
     image: redis:7.0.2
+    networks:
+      - brainlife
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 10s
@@ -11,7 +15,10 @@ services:
       retries: 5
 
   influxdb:
+    container_name: brainlife_influxdb_1
     image: influxdb:2.0
+    networks:
+      - brainlife
     volumes:
       - ./volumes/influxdb/:/var/lib/influxdb2/
     environment:
@@ -29,7 +36,10 @@ services:
       retries: 5
 
   mongodb:
+    container_name: brainlife_mongodb_1
     image: mongo:4.4
+    networks:
+      - brainlife
     volumes: 
       #- ./volumes/mongodb:/data/db
       - mongodata:/data/db
@@ -42,7 +52,10 @@ services:
       - 27017:27017 #for local debuggin
 
   rabbitmq:
+    container_name: brainlife_rabbitmq_1
     image: rabbitmq:3.10.5-management
+    networks:
+      - brainlife
     environment:
       - RABBITMQ_DEFAULT_VHOST=brainlife
     healthcheck:
@@ -54,7 +67,10 @@ services:
       - ./volumes/rabbitmq/:/var/lib/rabbitmq/
 
   auth-api:
+    container_name: brainlife_auth-api_1
     build: auth
+    networks:
+      - brainlife
     volumes:
       - ./auth:/app
     depends_on:
@@ -68,17 +84,25 @@ services:
         test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
 
   event-api:
+    container_name: brainlife_event-api_1
     build: event
+    networks:
+      - brainlife
     volumes:
       - ./event:/app
     depends_on:
+      mongodb:
+        condition: service_healthy
       auth-api:
         condition: service_healthy
     healthcheck:
         test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
 
   amaretti-api:
+    container_name: brainlife_amaretti-api_1
     build: amaretti
+    networks:
+      - brainlife
     volumes:
       - ./amaretti:/app
     depends_on:
@@ -89,7 +113,10 @@ services:
     command: pm2 start ./api/amaretti.js --attach --watch --ignore-watch "ui **/node_modules"
 
   amaretti-task-rule:
+    container_name: brainlife_amaretti-task-rule_1
     build: amaretti
+    networks:
+      - brainlife
     volumes:
       - ./amaretti:/app
     depends_on:
@@ -98,7 +125,10 @@ services:
     command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules"
 
   amaretti-task-ui:
+    container_name: brainlife_amaretti-task-ui_1
     build: amaretti
+    networks:
+      - brainlife
     volumes:
       - ./amaretti:/app
     depends_on:
@@ -108,6 +138,7 @@ services:
 
 # this runs synchronously (how?)
 #  amaretti-resource:
+#    container_name: brainlife_amaretti-resource_1
 #    build: amaretti
 #    volumes:
 #      - ./amaretti:/app
@@ -117,6 +148,7 @@ services:
 #    command: pm2 start ./bin/resource.js --attach --watch --ignore-watch "ui **/node_modules"
 
 #  amaretti-workdir:
+#    container_name: brainlife_amaretti-workdir_1
 #    build: amaretti
 #    volumes:
 #      - ./amaretti:/app
@@ -126,7 +158,10 @@ services:
 #    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-api:
+    container_name: brainlife_warehouse-api_1
     build: warehouse
+    networks:
+      - brainlife
     volumes:
       - ./warehouse:/app
       - ./volumes/archive:/archive:ro
@@ -142,7 +177,10 @@ services:
     command: pm2 start ./api/warehouse.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-rule:
+    container_name: brainlife_warehouse-rule_1
     build: warehouse
+    networks:
+      - brainlife
     volumes:
       - ./warehouse:/app
     depends_on:
@@ -151,7 +189,10 @@ services:
     command: pm2 start ./bin/rule_handler.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-events:
+    container_name: brainlife_warehouse-events_1
     build: warehouse
+    networks:
+      - brainlife
     volumes:
       - ./warehouse:/app
     depends_on:
@@ -160,14 +201,20 @@ services:
     command: pm2 start ./bin/event_handler.js --attach --watch --ignore-watch "ui **/node_modules"
 
   auth-ui:
+    container_name: brainlife_auth-ui_1
     build: ./auth/ui
+    networks:
+      - brainlife
     volumes:
       - ./auth/ui:/ui
     healthcheck:
         test: ["CMD", "curl", "-f", "http://localhost:3000"]
 
   warehouse-ui:
+    container_name: brainlife_warehouse-ui_1
     build: ./warehouse/ui
+    networks:
+      - brainlife
     volumes:
       - ./warehouse/ui:/ui
     healthcheck:
@@ -177,7 +224,10 @@ services:
       retries: 10
 
   nginx:
+    container_name: brainlife_nginx_1
     image: nginx:1.18
+    networks:
+      - brainlife
     restart:
       always
     depends_on:
@@ -199,7 +249,10 @@ services:
       - 8080:80
 
   archive:
+    container_name: brainlife_archive_1
     build: ./archive
+    networks:
+      - brainlife
     privileged: true #needed by singularity
     volumes:
       - ./archive/.ssh:/home/brainlife/.ssh:ro
@@ -211,7 +264,10 @@ services:
       - /etc/localtime:/etc/localtime #needed by singularity
 
   upload:
+    container_name: brainlife_upload_1
     build: ./upload
+    networks:
+      - brainlife
     privileged: true #needed by singularity
     volumes:
       - ./upload/.ssh:/home/brainlife/.ssh:ro
@@ -222,7 +278,10 @@ services:
       - /etc/localtime:/etc/localtime #needed by singularity
 
   compute:
+    container_name: brainlife_compute_1
     build: ./compute
+    networks:
+      - brainlife
     privileged: true #needed by singularity
     volumes:
       - ./compute/.ssh:/home/brainlife/.ssh:ro
@@ -232,7 +291,10 @@ services:
       - /etc/localtime:/etc/localtime #needed by singularity
 
   vis:
+    container_name: brainlife_vis_1
     build: ./vis
+    networks:
+      - brainlife
     privileged: true #needed by docker
     volumes:
       - ./volumes/vis-scratch:/scratch
@@ -250,4 +312,6 @@ services:
 volumes:
   mongodata:
 
-
+networks:
+  brainlife:
+    name: brainlife
