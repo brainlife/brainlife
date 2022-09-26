@@ -6,8 +6,6 @@ services:
     container_name: brainlife_redis
 
     image: redis:7.0.2
-    networks:
-      - brainlife
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 10s
@@ -17,8 +15,6 @@ services:
   influxdb:
     container_name: brainlife_influxdb
     image: influxdb:2.0
-    networks:
-      - brainlife
     volumes:
       - ./volumes/influxdb/:/var/lib/influxdb2/
     environment:
@@ -38,8 +34,6 @@ services:
   mongodb:
     container_name: brainlife_mongodb
     image: mongo:4.4
-    networks:
-      - brainlife
     volumes: 
       #- ./volumes/mongodb:/data/db
       - mongodata:/data/db
@@ -54,8 +48,6 @@ services:
   rabbitmq:
     container_name: brainlife_rabbitmq
     image: rabbitmq:3.10.5-management
-    networks:
-      - brainlife
     environment:
       - RABBITMQ_DEFAULT_VHOST=brainlife
     healthcheck:
@@ -69,8 +61,6 @@ services:
   auth-api:
     container_name: brainlife_auth-api
     build: auth
-    networks:
-      - brainlife
     volumes:
       - ./auth:/app
     depends_on:
@@ -86,8 +76,6 @@ services:
   event-api:
     container_name: brainlife_event-api
     build: event
-    networks:
-      - brainlife
     volumes:
       - ./event:/app
     depends_on:
@@ -101,8 +89,6 @@ services:
   amaretti-api:
     container_name: brainlife_amaretti-api
     build: amaretti
-    networks:
-      - brainlife
     volumes:
       - ./amaretti:/app
     depends_on:
@@ -115,8 +101,6 @@ services:
   amaretti-task-rule:
     container_name: brainlife_amaretti-task-rule
     build: amaretti
-    networks:
-      - brainlife
     volumes:
       - ./amaretti:/app
     depends_on:
@@ -127,8 +111,6 @@ services:
   amaretti-task-ui:
     container_name: brainlife_amaretti-task-ui
     build: amaretti
-    networks:
-      - brainlife
     volumes:
       - ./amaretti:/app
     depends_on:
@@ -160,8 +142,6 @@ services:
   warehouse-api:
     container_name: brainlife_warehouse-api
     build: warehouse
-    networks:
-      - brainlife
     volumes:
       - ./warehouse:/app
       - ./volumes/archive:/archive:ro
@@ -179,8 +159,6 @@ services:
   warehouse-rule:
     container_name: brainlife_warehouse-rule
     build: warehouse
-    networks:
-      - brainlife
     volumes:
       - ./warehouse:/app
     depends_on:
@@ -191,8 +169,6 @@ services:
   warehouse-events:
     container_name: brainlife_warehouse-events
     build: warehouse
-    networks:
-      - brainlife
     volumes:
       - ./warehouse:/app
     depends_on:
@@ -203,8 +179,6 @@ services:
   auth-ui:
     container_name: brainlife_auth-ui
     build: ./auth/ui
-    networks:
-      - brainlife
     volumes:
       - ./auth/ui:/ui
     healthcheck:
@@ -213,8 +187,6 @@ services:
   warehouse-ui:
     container_name: brainlife_warehouse-ui
     build: ./warehouse/ui
-    networks:
-      - brainlife
     volumes:
       - ./warehouse/ui:/ui
     healthcheck:
@@ -226,8 +198,6 @@ services:
   nginx:
     container_name: brainlife_nginx
     image: nginx:1.18
-    networks:
-      - brainlife
     restart:
       always
     depends_on:
@@ -251,8 +221,6 @@ services:
   archive:
     container_name: brainlife_archive
     build: ./archive
-    networks:
-      - brainlife
     privileged: true #needed by singularity
     volumes:
       - ./archive/.ssh:/home/brainlife/.ssh:ro
@@ -266,8 +234,6 @@ services:
   upload:
     container_name: brainlife_upload
     build: ./upload
-    networks:
-      - brainlife
     privileged: true #needed by singularity
     volumes:
       - ./upload/.ssh:/home/brainlife/.ssh:ro
@@ -280,8 +246,6 @@ services:
   compute:
     container_name: brainlife_compute
     build: ./compute
-    networks:
-      - brainlife
     privileged: true #needed by singularity
     volumes:
       - ./compute/.ssh:/home/brainlife/.ssh:ro
@@ -293,8 +257,6 @@ services:
   vis:
     container_name: brainlife_vis
     build: ./vis
-    networks:
-      - brainlife
     privileged: true #needed by docker
     volumes:
       - ./volumes/vis-scratch:/scratch
@@ -311,7 +273,3 @@ services:
 
 volumes:
   mongodata:
-
-networks:
-  brainlife:
-    name: brainlife
