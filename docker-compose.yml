@@ -3,6 +3,8 @@ version: "3"
 services:
 
   redis:
+    container_name: brainlife_redis
+    network: brainlife
     image: redis:7.0.2
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
@@ -11,6 +13,8 @@ services:
       retries: 5
 
   influxdb:
+    container_name: brainlife_influxdb
+    network: brainlife
     image: influxdb:2.0
     volumes:
       - ./volumes/influxdb/:/var/lib/influxdb2/
@@ -29,9 +33,10 @@ services:
       retries: 5
 
   mongodb:
+    container_name: brainlife_mongodb
+    network: brainlife
     image: mongo:4.4
     volumes: 
-      #- ./volumes/mongodb:/data/db
       - mongodata:/data/db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
@@ -39,9 +44,11 @@ services:
       timeout: 10s
       retries: 5
     ports:
-      - 27017:27017 #for local debuggin
+      - 27017:27017
 
   rabbitmq:
+    container_name: brainlife_rabbitmq
+    network: brainlife
     image: rabbitmq:3.10.5-management
     environment:
       - RABBITMQ_DEFAULT_VHOST=brainlife
@@ -54,6 +61,8 @@ services:
       - ./volumes/rabbitmq/:/var/lib/rabbitmq/
 
   auth-api:
+    container_name: brainlife_auth-api
+    network: brainlife
     build: auth
     volumes:
       - ./auth:/app
@@ -68,16 +77,22 @@ services:
         test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
 
   event-api:
+    container_name: brainlife_event-api
+    network: brainlife
     build: event
     volumes:
       - ./event:/app
     depends_on:
+      mongodb:
+        condition: service_healthy
       auth-api:
         condition: service_healthy
     healthcheck:
         test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
 
   amaretti-api:
+    container_name: brainlife_amaretti-api
+    network: brainlife
     build: amaretti
     volumes:
       - ./amaretti:/app
@@ -89,6 +104,8 @@ services:
     command: pm2 start ./api/amaretti.js --attach --watch --ignore-watch "ui **/node_modules"
 
   amaretti-task-rule:
+    container_name: brainlife_amaretti-task-rule
+    network: brainlife
     build: amaretti
     volumes:
       - ./amaretti:/app
@@ -98,6 +115,8 @@ services:
     command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules"
 
   amaretti-task-ui:
+    container_name: brainlife_amaretti-task-ui
+    network: brainlife
     build: amaretti
     volumes:
       - ./amaretti:/app
@@ -108,6 +127,8 @@ services:
 
 # this runs synchronously (how?)
 #  amaretti-resource:
+#    container_name: brainlife_amaretti-resource
+#    network: brainlife
 #    build: amaretti
 #    volumes:
 #      - ./amaretti:/app
@@ -117,6 +138,8 @@ services:
 #    command: pm2 start ./bin/resource.js --attach --watch --ignore-watch "ui **/node_modules"
 
 #  amaretti-workdir:
+#    container_name: brainlife_amaretti-workdir
+#    network: brainlife
 #    build: amaretti
 #    volumes:
 #      - ./amaretti:/app
@@ -126,6 +149,8 @@ services:
 #    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-api:
+    container_name: brainlife_warehouse-api
+    network: brainlife
     build: warehouse
     volumes:
       - ./warehouse:/app
@@ -142,6 +167,8 @@ services:
     command: pm2 start ./api/warehouse.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-rule:
+    container_name: brainlife_warehouse-rule
+    network: brainlife
     build: warehouse
     volumes:
       - ./warehouse:/app
@@ -151,6 +178,8 @@ services:
     command: pm2 start ./bin/rule_handler.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-events:
+    container_name: brainlife_warehouse-events
+    network: brainlife
     build: warehouse
     volumes:
       - ./warehouse:/app
@@ -160,6 +189,8 @@ services:
     command: pm2 start ./bin/event_handler.js --attach --watch --ignore-watch "ui **/node_modules"
 
   auth-ui:
+    container_name: brainlife_auth-ui
+    network: brainlife
     build: ./auth/ui
     volumes:
       - ./auth/ui:/ui
@@ -167,6 +198,8 @@ services:
         test: ["CMD", "curl", "-f", "http://localhost:3000"]
 
   warehouse-ui:
+    container_name: brainlife_warehouse-ui
+    network: brainlife
     build: ./warehouse/ui
     volumes:
       - ./warehouse/ui:/ui
@@ -177,6 +210,8 @@ services:
       retries: 10
 
   nginx:
+    container_name: brainlife_nginx
+    network: brainlife
     image: nginx:1.18
     restart:
       always
@@ -199,55 +234,70 @@ services:
       - 8080:80
 
   archive:
+    container_name: brainlife_archive
+    network: brainlife
     build: ./archive
-    privileged: true #needed by singularity
+    privileged: true # needed by singularity
     volumes:
       - ./archive/.ssh:/home/brainlife/.ssh:ro
       - ./volumes/archive:/archive
       - ./volumes/stage:/stage
       - ./volumes/secondary:/secondary
       - ./volumes/singularity:/home/brainlife/.singularity
-      - /etc/timezone:/etc/timezone #needed by singularity
-      - /etc/localtime:/etc/localtime #needed by singularity
+      - /etc/timezone:/etc/timezone # needed by singularity
+      - /etc/localtime:/etc/localtime # needed by singularity
 
   upload:
+    container_name: brainlife_upload
+    network: brainlife
     build: ./upload
-    privileged: true #needed by singularity
+    privileged: true # needed by singularity
     volumes:
       - ./upload/.ssh:/home/brainlife/.ssh:ro
       - ./volumes/upload:/upload
       - ./volumes/ezbids:/ezbids
       - ./volumes/singularity:/home/brainlife/.singularity
-      - /etc/timezone:/etc/timezone #needed by singularity
-      - /etc/localtime:/etc/localtime #needed by singularity
+      - /etc/timezone:/etc/timezone # needed by singularity
+      - /etc/localtime:/etc/localtime # needed by singularity
 
   compute:
+    container_name: brainlife_compute
+    network: brainlife
     build: ./compute
-    privileged: true #needed by singularity
+    privileged: true # needed by singularity
     volumes:
       - ./compute/.ssh:/home/brainlife/.ssh:ro
       - ./volumes/compute:/scratch
       - ./volumes/singularity:/home/brainlife/.singularity
-      - /etc/timezone:/etc/timezone #needed by singularity
-      - /etc/localtime:/etc/localtime #needed by singularity
+      - /etc/timezone:/etc/timezone # needed by singularity
+      - /etc/localtime:/etc/localtime # needed by singularity
 
   vis:
+    container_name: brainlife_vis
+    network: brainlife
     build: ./vis
-    privileged: true #needed by docker
+    privileged: true # needed by docker
     volumes:
       - ./volumes/vis-scratch:/scratch
       - ./volumes/vis-docker:/var/lib/docker
       - ./volumes/singularity:/root/.singularity
-      - /etc/timezone:/etc/timezone #needed by singularity
-      - /etc/localtime:/etc/localtime #needed by singularity
-      - /tmp/.X11-unix:/tmp/.X11-unix:ro #needs xserver on host (XQuartz for mac)
-      - /var/run/docker.sock:/var/run/docker.sock #let it use the host docker engine (only way I found so far)
+      - /etc/timezone:/etc/timezone # needed by singularity
+      - /etc/localtime:/etc/localtime # needed by singularity
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro # needs xserver on host (XQuartz for mac)
+      - /var/run/docker.sock:/var/run/docker.sock # let it use the host docker engine (only way I found so far)
     environment:
       - BRAINLIFE_HOSTSCRATCH=${PWD}/volumes/vis-scratch
     extra_hosts:
-    - "host.docker.internal:host-gateway" #setup.js needs access to the host
+    - "host.docker.internal:host-gateway" # setup.js needs access to the host
 
 volumes:
   mongodata:
 
-
+networks:
+  brainlife:
+    name: brainlife
+    # external: true # uncomment this if you want to use existing network
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+      # change to 0.0.0.0 or to your host IP if you want to access brainlife
+      # from outside of the docker host
