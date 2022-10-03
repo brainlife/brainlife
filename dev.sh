@@ -16,6 +16,32 @@ if [ ! -f amaretti/config/github.access_token ]; then
   exit 1
 fi
 
+# install dev config
+if [ ! -f auth/ui/config.js ]; then
+  echo "installing dev config for auth/ui"
+  cp auth/ui/config.js.dev auth/ui/config.js
+fi
+
+if [ ! -f auth/api/config/index.js ]; then
+  echo "installing dev config for auth"
+  cp auth/api/config/index.js.dev auth/api/config/index.js
+fi
+
+if [ ! -f event/api/config/index.js ]; then
+  echo "installing dev config for event"
+  cp event/api/config/index.js.dev event/api/config/index.js
+fi
+
+if [ ! -f amaretti/config/index.js ]; then
+  echo "installing dev config for amaretti"
+  cp amaretti/config/index.js.dev amaretti/config/index.js
+fi
+
+if [ ! -f warehouse/api/config/index.js ]; then
+  echo "installing dev config for warehouse/api"
+  cp warehouse/api/config/index.js.dev warehouse/api/config/index.js
+fi
+
 #setup volume directories that needs to be non-root
 for path in archive stage secondary upload singularity compute
 do
