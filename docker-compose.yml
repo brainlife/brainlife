@@ -4,7 +4,8 @@ services:
 
   redis:
     container_name: brainlife_redis
-    network: brainlife
+    networks:
+      - brainlife
     image: redis:7.0.2
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
@@ -14,7 +15,8 @@ services:
 
   influxdb:
     container_name: brainlife_influxdb
-    network: brainlife
+    networks:
+      - brainlife
     image: influxdb:2.0
     volumes:
       - ./volumes/influxdb/:/var/lib/influxdb2/
@@ -34,7 +36,8 @@ services:
 
   mongodb:
     container_name: brainlife_mongodb
-    network: brainlife
+    networks:
+      - brainlife
     image: mongo:4.4
     volumes: 
       - mongodata:/data/db
@@ -48,7 +51,8 @@ services:
 
   rabbitmq:
     container_name: brainlife_rabbitmq
-    network: brainlife
+    networks:
+      - brainlife
     image: rabbitmq:3.10.5-management
     environment:
       - RABBITMQ_DEFAULT_VHOST=brainlife
@@ -62,7 +66,8 @@ services:
 
   auth-api:
     container_name: brainlife_auth-api
-    network: brainlife
+    networks:
+      - brainlife
     build: auth
     volumes:
       - ./auth:/app
@@ -78,7 +83,8 @@ services:
 
   event-api:
     container_name: brainlife_event-api
-    network: brainlife
+    networks:
+      - brainlife
     build: event
     volumes:
       - ./event:/app
@@ -92,7 +98,8 @@ services:
 
   amaretti-api:
     container_name: brainlife_amaretti-api
-    network: brainlife
+    networks:
+      - brainlife
     build: amaretti
     volumes:
       - ./amaretti:/app
@@ -105,7 +112,8 @@ services:
 
   amaretti-task-rule:
     container_name: brainlife_amaretti-task-rule
-    network: brainlife
+    networks:
+      - brainlife
     build: amaretti
     volumes:
       - ./amaretti:/app
@@ -116,7 +124,8 @@ services:
 
   amaretti-task-ui:
     container_name: brainlife_amaretti-task-ui
-    network: brainlife
+    networks:
+      - brainlife
     build: amaretti
     volumes:
       - ./amaretti:/app
@@ -128,7 +137,8 @@ services:
 # this runs synchronously (how?)
 #  amaretti-resource:
 #    container_name: brainlife_amaretti-resource
-#    network: brainlife
+#    networks:
+#      - brainlife
 #    build: amaretti
 #    volumes:
 #      - ./amaretti:/app
@@ -139,7 +149,8 @@ services:
 
 #  amaretti-workdir:
 #    container_name: brainlife_amaretti-workdir
-#    network: brainlife
+#    networks:
+#      - brainlife
 #    build: amaretti
 #    volumes:
 #      - ./amaretti:/app
@@ -150,7 +161,8 @@ services:
 
   warehouse-api:
     container_name: brainlife_warehouse-api
-    network: brainlife
+    networks:
+      - brainlife
     build: warehouse
     volumes:
       - ./warehouse:/app
@@ -168,7 +180,8 @@ services:
 
   warehouse-rule:
     container_name: brainlife_warehouse-rule
-    network: brainlife
+    networks:
+      - brainlife
     build: warehouse
     volumes:
       - ./warehouse:/app
@@ -179,7 +192,8 @@ services:
 
   warehouse-events:
     container_name: brainlife_warehouse-events
-    network: brainlife
+    networks:
+      - brainlife
     build: warehouse
     volumes:
       - ./warehouse:/app
@@ -190,7 +204,8 @@ services:
 
   auth-ui:
     container_name: brainlife_auth-ui
-    network: brainlife
+    networks:
+      - brainlife
     build: ./auth/ui
     volumes:
       - ./auth/ui:/ui
@@ -199,7 +214,8 @@ services:
 
   warehouse-ui:
     container_name: brainlife_warehouse-ui
-    network: brainlife
+    networks:
+      - brainlife
     build: ./warehouse/ui
     volumes:
       - ./warehouse/ui:/ui
@@ -211,7 +227,8 @@ services:
 
   nginx:
     container_name: brainlife_nginx
-    network: brainlife
+    networks:
+      - brainlife
     image: nginx:1.18
     restart:
       always
@@ -235,7 +252,8 @@ services:
 
   archive:
     container_name: brainlife_archive
-    network: brainlife
+    networks:
+      - brainlife
     build: ./archive
     privileged: true # needed by singularity
     volumes:
@@ -249,7 +267,8 @@ services:
 
   upload:
     container_name: brainlife_upload
-    network: brainlife
+    networks:
+      - brainlife
     build: ./upload
     privileged: true # needed by singularity
     volumes:
@@ -262,7 +281,8 @@ services:
 
   compute:
     container_name: brainlife_compute
-    network: brainlife
+    networks:
+      - brainlife
     build: ./compute
     privileged: true # needed by singularity
     volumes:
@@ -274,7 +294,8 @@ services:
 
   vis:
     container_name: brainlife_vis
-    network: brainlife
+    networks:
+      - brainlife
     build: ./vis
     privileged: true # needed by docker
     volumes:
