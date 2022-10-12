@@ -64,167 +64,6 @@ services:
     volumes:
       - ./volumes/rabbitmq/:/var/lib/rabbitmq/
 
-  auth-api:
-    container_name: brainlife_auth-api
-    networks:
-      - brainlife
-    build: auth
-    volumes:
-      - ./auth:/app
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-
-  event-api:
-    container_name: brainlife_event-api
-    networks:
-      - brainlife
-    build: event
-    volumes:
-      - ./event:/app
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      auth-api:
-        condition: service_healthy
-    healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-
-  amaretti-api:
-    container_name: brainlife_amaretti-api
-    networks:
-      - brainlife
-    build: amaretti
-    volumes:
-      - ./amaretti:/app
-    depends_on:
-      event-api:
-        condition: service_healthy
-    healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-    command: pm2 start ./api/amaretti.js --attach --watch --ignore-watch "ui **/node_modules"
-
-  amaretti-task-rule:
-    container_name: brainlife_amaretti-task-rule
-    networks:
-      - brainlife
-    build: amaretti
-    volumes:
-      - ./amaretti:/app
-    depends_on:
-      event-api:
-        condition: service_healthy
-    command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules"
-
-  amaretti-task-ui:
-    container_name: brainlife_amaretti-task-ui
-    networks:
-      - brainlife
-    build: amaretti
-    volumes:
-      - ./amaretti:/app
-    depends_on:
-      event-api:
-        condition: service_healthy
-    command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules" -- --nonice
-
-# this runs synchronously (how?)
-#  amaretti-resource:
-#    container_name: brainlife_amaretti-resource
-#    networks:
-#      - brainlife
-#    build: amaretti
-#    volumes:
-#      - ./amaretti:/app
-#    depends_on:
-#      event-api:
-#        condition: service_healthy
-#    command: pm2 start ./bin/resource.js --attach --watch --ignore-watch "ui **/node_modules"
-
-#  amaretti-workdir:
-#    container_name: brainlife_amaretti-workdir
-#    networks:
-#      - brainlife
-#    build: amaretti
-#    volumes:
-#      - ./amaretti:/app
-#    depends_on:
-#      event-api:
-#        condition: service_healthy
-#    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
-
-  warehouse-api:
-    container_name: brainlife_warehouse-api
-    networks:
-      - brainlife
-    build: warehouse
-    volumes:
-      - ./warehouse:/app
-      - ./volumes/archive:/archive:ro
-      - ./volumes/secondary:/secondary:ro
-    depends_on:
-      amaretti-api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-    command: pm2 start ./api/warehouse.js --attach --watch --ignore-watch "ui **/node_modules"
-
-  warehouse-rule:
-    container_name: brainlife_warehouse-rule
-    networks:
-      - brainlife
-    build: warehouse
-    volumes:
-      - ./warehouse:/app
-    depends_on:
-      amaretti-api:
-        condition: service_healthy
-    command: pm2 start ./bin/rule_handler.js --attach --watch --ignore-watch "ui **/node_modules"
-
-  warehouse-events:
-    container_name: brainlife_warehouse-events
-    networks:
-      - brainlife
-    build: warehouse
-    volumes:
-      - ./warehouse:/app
-    depends_on:
-      amaretti-api:
-        condition: service_healthy
-    command: pm2 start ./bin/event_handler.js --attach --watch --ignore-watch "ui **/node_modules"
-
-  auth-ui:
-    container_name: brainlife_auth-ui
-    networks:
-      - brainlife
-    build: ./auth/ui
-    volumes:
-      - ./auth/ui:/ui
-    healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:3000"]
-
-  warehouse-ui:
-    container_name: brainlife_warehouse-ui
-    networks:
-      - brainlife
-    build: ./warehouse/ui
-    volumes:
-      - ./warehouse/ui:/ui
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-
   nginx:
     container_name: brainlife_nginx
     networks:
@@ -250,12 +89,209 @@ services:
     ports:
       - 8080:80
 
+  auth-api-generate_keys:
+    container_name: brainlife_auth-api_generate_keys
+    build: ./auth
+    image: brainlife_auth
+    networks:
+      - brainlife
+    volumes:
+      - ./:/brainlife-dev
+      - ./auth:/app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: on-failure
+    working_dir: /brainlife-dev
+    entrypoint: /brainlife-dev/scripts/generate_keys.sh
+
+  auth-api:
+    container_name: brainlife_auth-api
+    networks:
+      - brainlife
+    build: ./auth
+    image: brainlife_auth
+    volumes:
+      - ./auth:/app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth-api-generate_keys:
+        condition: service_completed_successfully
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+
+  event-api:
+    container_name: brainlife_event-api
+    networks:
+      - brainlife
+    build: ./event
+    image: brainlife_event
+    volumes:
+      - ./event:/app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      auth-api:
+        condition: service_healthy
+      auth-api-generate_keys:
+        condition: service_completed_successfully
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+
+  amaretti-api:
+    container_name: brainlife_amaretti-api
+    networks:
+      - brainlife
+    build: ./amaretti
+    image: brainlife_amaretti
+    volumes:
+      - ./amaretti:/app
+    depends_on:
+      event-api:
+        condition: service_healthy
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    command: pm2 start ./api/amaretti.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  amaretti-task-rule:
+    container_name: brainlife_amaretti-task-rule
+    networks:
+      - brainlife
+    build: ./amaretti
+    image: brainlife_amaretti
+    volumes:
+      - ./amaretti:/app
+    depends_on:
+      event-api:
+        condition: service_healthy
+    command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  amaretti-task-ui:
+    container_name: brainlife_amaretti-task-ui
+    networks:
+      - brainlife
+    build: ./amaretti
+    image: brainlife_amaretti
+    volumes:
+      - ./amaretti:/app
+    depends_on:
+      event-api:
+        condition: service_healthy
+    command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules" -- --nonice
+
+# this runs synchronously (how?)
+#  amaretti-resource:
+#    container_name: brainlife_amaretti-resource
+#    networks:
+#      - brainlife
+#    build: ./amaretti
+#    image: brainlife_amaretti
+#    volumes:
+#      - ./amaretti:/app
+#    depends_on:
+#      event-api:
+#        condition: service_healthy
+#    command: pm2 start ./bin/resource.js --attach --watch --ignore-watch "ui **/node_modules"
+
+#  amaretti-workdir:
+#    container_name: brainlife_amaretti-workdir
+#    networks:
+#      - brainlife
+#    build: ./amaretti
+#    image: brainlife_amaretti
+#    volumes:
+#      - ./amaretti:/app
+#    depends_on:
+#      event-api:
+#        condition: service_healthy
+#    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  warehouse-api:
+    container_name: brainlife_warehouse-api
+    networks:
+      - brainlife
+    build: ./warehouse
+    image: brainlife_warehouse
+    volumes:
+      - ./warehouse:/app
+      - ./volumes/archive:/archive:ro
+      - ./volumes/secondary:/secondary:ro
+    depends_on:
+      amaretti-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    command: pm2 start ./api/warehouse.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  warehouse-rule:
+    container_name: brainlife_warehouse-rule
+    networks:
+      - brainlife
+    build: ./warehouse
+    image: brainlife_warehouse
+    volumes:
+      - ./warehouse:/app
+    depends_on:
+      amaretti-api:
+        condition: service_healthy
+    command: pm2 start ./bin/rule_handler.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  warehouse-events:
+    container_name: brainlife_warehouse-events
+    networks:
+      - brainlife
+    build: ./warehouse
+    image: brainlife_warehouse
+    volumes:
+      - ./warehouse:/app
+    depends_on:
+      amaretti-api:
+        condition: service_healthy
+    command: pm2 start ./bin/event_handler.js --attach --watch --ignore-watch "ui **/node_modules"
+
+  auth-ui:
+    container_name: brainlife_auth-ui
+    networks:
+      - brainlife
+    build: ./auth/ui
+    image: brainlife_auth-ui
+    volumes:
+      - ./auth/ui:/ui
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:3000"]
+
+  warehouse-ui:
+    container_name: brainlife_warehouse-ui
+    networks:
+      - brainlife
+    build: ./warehouse/ui
+    image: brainlife_warehouse-ui
+    volumes:
+      - ./warehouse/ui:/ui
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
   archive:
     container_name: brainlife_archive
     networks:
       - brainlife
     build: ./archive
+    image: brainlife_archive
     privileged: true # needed by singularity
+    depends_on:
+      auth-api-generate_keys:
+        condition: service_completed_successfully
     volumes:
       - ./archive/.ssh:/home/brainlife/.ssh:ro
       - ./volumes/archive:/archive
@@ -270,6 +306,7 @@ services:
     networks:
       - brainlife
     build: ./upload
+    image: brainlife_upload
     privileged: true # needed by singularity
     volumes:
       - ./upload/.ssh:/home/brainlife/.ssh:ro
@@ -284,6 +321,7 @@ services:
     networks:
       - brainlife
     build: ./compute
+    image: brainlife_compute
     privileged: true # needed by singularity
     volumes:
       - ./compute/.ssh:/home/brainlife/.ssh:ro
@@ -297,6 +335,7 @@ services:
     networks:
       - brainlife
     build: ./vis
+    image: brainlife_vis
     privileged: true # needed by docker
     volumes:
       - ./volumes/vis-scratch:/scratch

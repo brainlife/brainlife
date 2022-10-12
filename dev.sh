@@ -55,9 +55,6 @@ done
 hash docker
 hash docker-compose
 
-#sudo chown 1000:1000 archive/.ssh
-#sudo chown 1000:1000 upload/.ssh
-
 if [ ! -d /tmp/.X11-unix ]; then
   echo "Can't find /tmp/.X11-unix - vis server needs X server (like Xquartz)." 
   exit
@@ -99,61 +96,6 @@ fi
 
 #warehouse web ui
 [ ! -d warehouse/ui/node_modules ] && (cd warehouse/ui && npm install)
-
-###################################################################
-#
-# generate files
-#
-(
-  cd auth/api/config
-  if [ ! -f auth.key ]; then
-    echo "auth.key missing.. creating"
-    openssl genrsa -out auth.key 2048
-    chmod 600 auth.key
-    openssl rsa -in auth.key -pubout > auth.pub
-  fi
-)
-
-(
-  cd event/api/config
-  if [ ! -f event.jwt ]; then
-    #TODO - I need to run this inside running auth api container so it can connect to the DB?
-    export OPENSSL_CONF=/dev/null #prevent an odd module load issue
-    ../../../auth/bin/auth.js issue --scopes '{ "sca": ["admin"] }' --sub 'event' > event.jwt
-  fi
-)
-cp auth/api/config/auth.pub event/api/config/auth.pub
-
-(
-  cd amaretti/config
-  if [ ! -f amaretti.jwt ]; then
-    #TODO - I need to run this inside running auth api container so it can connect to the DB?
-    ../../auth/bin/auth.js issue --scopes '{ "auth": ["admin"], "amaretti": ["admin"] }' --sub 'amaretti' > amaretti.jwt
-  fi
-)
-cp auth/api/config/auth.pub amaretti/config/auth.pub
-
-(
-  cd warehouse/api/config
-  if [ ! -f warehouse.jwt ]; then
-    #TODO - I need to run this inside running auth api container so it can connect to the DB?
-    ../../../auth/bin/auth.js issue --scopes '{ "auth": ["admin"], "amaretti": ["admin"], "profile": ["admin"] }' --sub 'warehouse' > warehouse.jwt
-  fi
-
-  if [ ! -f warehouse.key ]; then
-    openssl genrsa -out warehouse.key 2048
-    chmod 600 warehouse.key
-    openssl rsa -in warehouse.key -pubout > warehouse.pub
-  fi
-
-  #for xnat?
-  if [ ! -f configEncrypt.key ]; then
-    openssl genrsa -out configEncrypt.key 2048
-    chmod 600 configEncrypt.key
-  fi
-)
-cp auth/api/config/auth.pub warehouse/api/config/auth.pub
-cp warehouse/api/config/configEncrypt.key archive/.ssh
 
 ###################################################################
 #

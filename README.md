@@ -7,11 +7,11 @@ Brainlife is a free and open source platform for neuroscience data management. T
 
 Brainlife is a single integrative interface to manage, visualize, preprocess and analyze data (fMRI, dMRI, anatomical MRI, EEG and MEG). THe platform also allows to publish all research assets associated with a scientific project (data, preprocessing services and data analysis notebooks) in a single record addressed by a digital-object-identifier (DOI). The platform is unique because of its focus on supporting scientific reproducibility beyond open code and open data, by providing fundamental smart mechanisms for what we refer to as “Open Services.” 
 
-# Running brainlife Development Instance
+# Running Brainlife Development Instance
 
-!! This is still a WIP
+:warning: **This is a work in progress** :warning:
 
-## Prerequisite
+## Prerequisites
 
 You will need to have an environment with the following software packages
 
@@ -22,7 +22,7 @@ You will need to have an environment with the following software packages
 apt install docker-compose golang-docker-credential-helpers
 ```
 
-## Prerequisite for gpu enabled novnc sessions
+## Prerequisites for gpu-enabled novnc sessions
 
 Not all novnc vis apps require GPU, but if you have nvidia gpu on your local machine, you should be
 able to launch it by having these tools installed
@@ -33,7 +33,7 @@ able to launch it by having these tools installed
 The vis/Dockerfile installs specific version of libnvidia drivers. I believe the version must match with the
 version of the driver installed on your host or vglrun won't work.
 
-### docker-compose versions
+## docker-compose versions
 
 Please make sure that you have the correct docker-compose version installed
 
@@ -47,25 +47,29 @@ OpenSSL version: OpenSSL 1.1.1h  22 Sep 2020
 
 Then git clone this repo and all of its submodules.
 
-```
+```bash
 git clone https://github.com/brainlife/brainlife --recursive 
 ```
 
-Then launch the dev stack (with auto-code watching) by
+Then launch the dev stack (with auto-reload on code changes) by
 
-```
+```bash
 ./dev.sh
 ```
 
-### populate database with test accounts / data
+## Populate database with test accounts / data
 
-Once all services starts up, you can open your browser to access the warehouse UI at `https://localhost:8080`. If this is the first time you are running the dev instance, you can insert some database records by running `./populatedb.sh`. This inserts the following collections.
+Once all services starts up, you can open your browser to access the warehouse UI at `https://localhost:8080`. If this is the first time you are running the dev instance, you can insert some database records by running `./scripts/populate_db.sh`. This inserts the following collections.
 
 * auth - user/group
 * warehouse - datatypes/uis/apps
 
-You can then login as administrator by entering user:admin password:admin123. 
-You can also login as guest user by entering user:guest password:guest123
+The default data contain two users: `admin` and `guest`.
+They come with **no password**, so make sure to set-up a password for them by using:
+
+```bash
+./scripts/passwd.sh <user>
+```
 
 ## TODO
 
