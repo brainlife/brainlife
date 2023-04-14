@@ -13,10 +13,12 @@ Brainlife is a single integrative interface to manage, visualize, preprocess and
 
 ## Prerequisites
 
+Currently the installation supports Linux and Mac OS
 You will need to have an environment with the following software packages
 
 * docker / docker-compose 
 * git
+* Node.js 16 
 
 ```
 apt install docker-compose golang-docker-credential-helpers
