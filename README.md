@@ -17,6 +17,8 @@ You will need to have an environment with the following software packages
 
 * docker / docker-compose 
 * git
+* nodejs 16 
+* Currently supports Linux and Mac OS
 
 ```
 apt install docker-compose golang-docker-credential-helpers
