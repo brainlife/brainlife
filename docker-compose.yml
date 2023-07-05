@@ -221,6 +221,7 @@ services:
       - ./warehouse:/app
       - ./volumes/archive:/archive:ro
       - ./volumes/secondary:/secondary:ro
+      - ./volumes/datalad:/datalad
     depends_on:
       amaretti-api:
         condition: service_healthy
@@ -230,6 +231,8 @@ services:
       timeout: 10s
       retries: 5
     command: pm2 start ./api/warehouse.js --attach --watch --ignore-watch "ui **/node_modules"
+    environment:
+      - DATALAD_DIRECTORY=/datalad
 
   warehouse-rule:
     container_name: brainlife_warehouse-rule
