@@ -57,6 +57,10 @@ if [ ! -f warehouse/api/config/configEncrypt.key ]; then
 fi
 cp auth/api/config/auth.pub warehouse/api/config/auth.pub
 
+
+# EZBIDS
+cp auth/api/config/auth.pub ezbids/api/auth.pub
+
 # Archive
 mkdir -p archive/.ssh
 cp warehouse/api/config/configEncrypt.key archive/.ssh/configEncrypt.key
