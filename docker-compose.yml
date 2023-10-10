@@ -53,7 +53,7 @@ services:
     container_name: brainlife_rabbitmq
     networks:
       - brainlife
-    image: rabbitmq:3.10.5-management
+    image: rabbitmq:3.12.6-management
     environment:
       - RABBITMQ_DEFAULT_VHOST=brainlife
     healthcheck:
