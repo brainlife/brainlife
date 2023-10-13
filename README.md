@@ -12,8 +12,6 @@ Brainlife is a single integrative interface to manage, visualize, preprocess and
 :warning: **This is a work in progress** :warning:
 
 ## Prerequisites
-
-Currently the installation supports Linux and Mac OS
 You will need to have an environment with the following software packages
 
 * docker / docker-compose 
@@ -21,8 +19,19 @@ You will need to have an environment with the following software packages
 * Node.js 16 
 
 ```
+# For Linux Users (Or Users with a AMD64 chip architecture)
 apt install docker-compose golang-docker-credential-helpers
 ```
+
+> [!IMPORTANT]
+> The 'apt' command is a command-line tool that works with Ubuntu's Advanced Packaging Tool (APT) and is not compatible with the current MacOS. It is currently recommended that the user downloads the [Docker Desktop Application](https://www.docker.com/products/docker-desktop/) from the Docker website to meet the pre-requisites of docker/docker-compose
+
+> [!IMPORTANT]
+> Additionally, the docker container that contains brainlife.io natively supports the AMD64 chip architecure over the MacOS's natively supported ARM64 chip architecture, and will try to run the container with the ARM64 chip architecture, so we neeed to manually let Docker know that we will download the container as it is.
+> ```
+> # Run this command before you run the bash file: dev.sh
+> export DOCKER_DEFAULT_PLATFORM=linux/amd64
+> ```
 
 ## Prerequisites for gpu-enabled novnc sessions
 
