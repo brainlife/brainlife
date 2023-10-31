@@ -14,6 +14,8 @@ if [[ "$@" == *--wipe* ]]; then
   rm -f warehouse/api/config/warehouse.jwt
   rm -f warehouse/api/config/warehouse.key
   rm -f warehouse/api/config/warehouse.pub
+  rm -f ezbids/api/auth.pub
+  rm -f ezbids/api/ezbids.pub
   rm -f archive/.ssh/configEncrypt.key
   exit 0
 fi
@@ -57,8 +59,12 @@ if [ ! -f warehouse/api/config/configEncrypt.key ]; then
 fi
 cp auth/api/config/auth.pub warehouse/api/config/auth.pub
 
-
-# EZBIDS
+# ezBIDS
+if [ ! -f ezbids/api/auth.key ]; then
+  openssl genrsa -out ezbids/api/ezbids.key 2048
+  chmod 600 ezbids/api/ezbids.key
+  openssl rsa -in ezbids/api/ezbids.key -pubout > ezbids/api/ezbids.pub
+fi
 cp auth/api/config/auth.pub ezbids/api/auth.pub
 
 # Archive
