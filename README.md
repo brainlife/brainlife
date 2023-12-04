@@ -12,8 +12,6 @@ Brainlife is a single integrative interface to manage, visualize, preprocess and
 :warning: **This is a work in progress** :warning:
 
 ## Prerequisites
-
-Currently the installation supports Linux and Mac OS
 You will need to have an environment with the following software packages
 
 * docker / docker-compose 
@@ -21,8 +19,18 @@ You will need to have an environment with the following software packages
 * Node.js 16 
 
 ```
+# For Linux Users (Or Users with a AMD64 chip architecture)
 apt install docker-compose golang-docker-credential-helpers
 ```
+
+> [!IMPORTANT]
+> The 'apt' command is a command-line tool that works with Ubuntu's Advanced Packaging Tool (APT) and is not compatible with the current MacOS. It is currently recommended that the user downloads the [Docker Desktop Application](https://www.docker.com/products/docker-desktop/) from the Docker website to meet the pre-requisites of docker/docker-compose
+
+> [!IMPORTANT]
+> Additionally, the docker container that contains brainlife.io natively supports the x64 chip architecure over the MacOS's M1/M2 chip architecture, and will try to run the container with the x64 chip architecture, so we neeed to manually let Docker know that we will download the container as it is.
+> ```
+> export DOCKER_DEFAULT_PLATFORM=linux/amd64
+> ```
 
 ## Prerequisites for gpu-enabled novnc sessions
 
@@ -30,7 +38,7 @@ Not all novnc vis apps require GPU, but if you have nvidia gpu on your local mac
 able to launch it by having these tools installed
 
 * vglserver (run vglserver_config and allow all access)
-* nvidia-docker2 (required to run vis app with `--gpus all` option. See https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#installing-on-ubuntu-and-debian
+* nvidia-docker2 (required to run vis app with `--gpus all` option. See https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#installing-on-ubuntu-and-debian)
 
 The vis/Dockerfile installs specific version of libnvidia drivers. I believe the version must match with the
 version of the driver installed on your host or vglrun won't work.
@@ -58,6 +66,15 @@ Then launch the dev stack (with auto-reload on code changes) by
 ```bash
 ./dev.sh
 ```
+
+### Some Error Troubleshooting for MacOS Users
+> [!IMPORTANT]
+> If one encounters an error such as “Error response from daemon: image with reference ________:_____ was found but does not match the specified platform: wanted linux/amd64, actual: linux/arm64/v8”, with the initial blank being the DB the image is being referenced from and latter blank being the DB version, one can troubleshoot the issue by runnning said code in CL and then rerunning "bash dev.sh" on the command line:
+>```
+> # first blank: affected db; second blank: affected db version
+> # ex) influxdb:2.0
+> docker rmi -f _____:__ 
+>```
 
 ## Populate database with test accounts / data
 
