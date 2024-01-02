@@ -2,6 +2,8 @@
 
 set -ex
 
+exit 0
+
 if [[ "$@" == *--wipe* ]]; then
   rm -f auth/api/config/auth.key
   rm -f auth/api/config/auth.pub

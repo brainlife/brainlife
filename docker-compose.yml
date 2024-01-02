@@ -12,6 +12,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+    ports:
+      - 6379:6379
 
   influxdb:
     container_name: brainlife_influxdb
@@ -29,7 +31,7 @@ services:
       - DOCKER_INFLUXDB_INIT_RETENTION=1w
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mydevtoken
     healthcheck:
-      test: ["CMD", "curl", "influxdb:8086/api/v2/ping"]
+      test: [ "CMD", "curl", "influxdb:8086/api/v2/ping" ]
       interval: 1m
       timeout: 10s
       retries: 5
@@ -39,7 +41,7 @@ services:
     networks:
       - brainlife
     image: mongo:4.4
-    volumes: 
+    volumes:
       - mongodata:/data/db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
@@ -63,14 +65,16 @@ services:
       retries: 5
     volumes:
       - ./volumes/rabbitmq/:/var/lib/rabbitmq/
+    ports:
+      - '5672:5672'
+      - '15672:15672'
 
   nginx:
     container_name: brainlife_nginx
     networks:
       - brainlife
     image: nginx:1.18
-    restart:
-      always
+    restart: always
     depends_on:
       amaretti-api:
         condition: service_healthy
@@ -103,7 +107,7 @@ services:
         condition: service_healthy
     restart: on-failure
     working_dir: /brainlife-dev
-    entrypoint: /brainlife-dev/scripts/generate_keys.sh
+    entrypoint: /bin/sh
 
   auth-api:
     container_name: brainlife_auth-api
@@ -113,6 +117,9 @@ services:
     image: brainlife_auth
     volumes:
       - ./auth:/app
+      - /app/node_modules
+    ports:
+      - 28000:8000
     depends_on:
       mongodb:
         condition: service_healthy
@@ -123,7 +130,7 @@ services:
       auth-api-generate_keys:
         condition: service_completed_successfully
     healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
 
   event-api:
     container_name: brainlife_event-api
@@ -141,7 +148,7 @@ services:
       auth-api-generate_keys:
         condition: service_completed_successfully
     healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
 
   amaretti-api:
     container_name: brainlife_amaretti-api
@@ -155,7 +162,7 @@ services:
       event-api:
         condition: service_healthy
     healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
     command: pm2 start ./api/amaretti.js --attach --watch --ignore-watch "ui **/node_modules"
 
   amaretti-task-rule:
@@ -184,32 +191,32 @@ services:
         condition: service_healthy
     command: pm2 start ./bin/task.js --attach --watch --ignore-watch "ui **/node_modules" -- --nonice
 
-# this runs synchronously (how?)
-#  amaretti-resource:
-#    container_name: brainlife_amaretti-resource
-#    networks:
-#      - brainlife
-#    build: ./amaretti
-#    image: brainlife_amaretti
-#    volumes:
-#      - ./amaretti:/app
-#    depends_on:
-#      event-api:
-#        condition: service_healthy
-#    command: pm2 start ./bin/resource.js --attach --watch --ignore-watch "ui **/node_modules"
+  # this runs synchronously (how?)
+  #  amaretti-resource:
+  #    container_name: brainlife_amaretti-resource
+  #    networks:
+  #      - brainlife
+  #    build: ./amaretti
+  #    image: brainlife_amaretti
+  #    volumes:
+  #      - ./amaretti:/app
+  #    depends_on:
+  #      event-api:
+  #        condition: service_healthy
+  #    command: pm2 start ./bin/resource.js --attach --watch --ignore-watch "ui **/node_modules"
 
-#  amaretti-workdir:
-#    container_name: brainlife_amaretti-workdir
-#    networks:
-#      - brainlife
-#    build: ./amaretti
-#    image: brainlife_amaretti
-#    volumes:
-#      - ./amaretti:/app
-#    depends_on:
-#      event-api:
-#        condition: service_healthy
-#    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
+  #  amaretti-workdir:
+  #    container_name: brainlife_amaretti-workdir
+  #    networks:
+  #      - brainlife
+  #    build: ./amaretti
+  #    image: brainlife_amaretti
+  #    volumes:
+  #      - ./amaretti:/app
+  #    depends_on:
+  #      event-api:
+  #        condition: service_healthy
+  #    command: pm2 start ./bin/remove_workdirs.js --attach --watch --ignore-watch "ui **/node_modules"
 
   warehouse-api:
     container_name: brainlife_warehouse-api
@@ -221,15 +228,18 @@ services:
       - ./warehouse:/app
       - ./volumes/archive:/archive:ro
       - ./volumes/secondary:/secondary:ro
+      - ./volumes/datalad:/datalad
     depends_on:
       amaretti-api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 15s
       timeout: 10s
       retries: 5
     command: pm2 start ./api/warehouse.js --attach --watch --ignore-watch "ui **/node_modules"
+    environment:
+      - DATALAD_DIRECTORY=/datalad
 
   warehouse-rule:
     container_name: brainlife_warehouse-rule
@@ -265,8 +275,11 @@ services:
     image: brainlife_auth-ui
     volumes:
       - ./auth/ui:/ui
+    depends_on:
+      auth-api:
+        condition: service_healthy
     healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: [ "CMD", "curl", "-f", "http://localhost:3000" ]
 
   warehouse-ui:
     container_name: brainlife_warehouse-ui
@@ -277,7 +290,7 @@ services:
     volumes:
       - ./warehouse/ui:/ui
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -348,10 +361,11 @@ services:
     environment:
       - BRAINLIFE_HOSTSCRATCH=${PWD}/volumes/vis-scratch
     extra_hosts:
-    - "host.docker.internal:host-gateway" # setup.js needs access to the host
+      - "host.docker.internal:host-gateway" # setup.js needs access to the host
 
 volumes:
   mongodata:
+
 
 networks:
   brainlife:

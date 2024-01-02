@@ -100,4 +100,10 @@ fi
 ###################################################################
 #
 # now ready to start it up!
-docker-compose up --build
+CMD=$@
+if [ -z "$CMD" ];
+then
+    CMD="up";
+fi
+
+docker-compose $CMD
