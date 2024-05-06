@@ -22,10 +22,10 @@ if [ ! -f auth/ui/config.js ]; then
   cp auth/ui/config.js.dev auth/ui/config.js
 fi
 
-if [ ! -f auth/api/config/index.js ]; then
-  echo "installing dev config for auth"
-  cp auth/api/config/index.js.dev auth/api/config/index.js
-fi
+# if [ ! -f auth/api/config/index.js ]; then
+#   echo "installing dev config for auth"
+#   cp auth/api/config/index.js.dev auth/api/config/index.js
+# fi
 
 if [ ! -f event/api/config/index.js ]; then
   echo "installing dev config for event"

@@ -1,48 +1,47 @@
-#!/bin/bash
-
+#!/bin/sh
 set -ex
 
-exit 0
 
-if [[ "$@" == *--wipe* ]]; then
-  rm -f auth/api/config/auth.key
-  rm -f auth/api/config/auth.pub
-  rm -f event/api/config/auth.pub
-  rm -f event/api/config/event.jwt
-  rm -f amaretti/config/amaretti.jwt
-  rm -f amaretti/config/auth.pub
-  rm -f warehouse/api/config/auth.pub
-  rm -f warehouse/api/config/configEncrypt.key
-  rm -f warehouse/api/config/warehouse.jwt
-  rm -f warehouse/api/config/warehouse.key
-  rm -f warehouse/api/config/warehouse.pub
-  rm -f archive/.ssh/configEncrypt.key
-  exit 0
-fi
+echo "RUNNING"
 
-AUTH="/app/bin/auth.js"
-if [ ! -f $AUTH ]; then  # Not on docker-compose
-  AUTH=$(realpath ./auth/bin/auth.js)
-fi
+#if [[ "$@" == *--wipe* ]]; then
+#  rm -f auth/auth.key
+#  rm -f auth/auth.pub
+#  rm -f event/api/config/auth.pub
+#  rm -f event/api/config/event.jwt
+#  rm -f amaretti/config/amaretti.jwt
+#  rm -f amaretti/config/auth.pub
+#  rm -f warehouse/api/config/auth.pub
+#  rm -f warehouse/api/config/configEncrypt.key
+#  rm -f warehouse/api/config/warehouse.jwt
+#  rm -f warehouse/api/config/warehouse.key
+#  rm -f warehouse/api/config/warehouse.pub
+#  rm -f ezbids/api/auth.pub
+#  rm -f ezbids/api/ezbids.pub
+#  rm -f archive/.ssh/configEncrypt.key
+#  exit 0
+#fi
+
+AUTH="/app/dist/main.js"
 
 # Auth
-if [ ! -f auth/api/config/auth.key ]; then
-  openssl genrsa -out auth/api/config/auth.key 2048
-  chmod 600 auth/api/config/auth.key
-  openssl rsa -in auth/api/config/auth.key -pubout > auth/api/config/auth.pub
+if [ ! -f auth/auth.key ]; then
+  openssl genrsa -out auth/auth.key 2048
+  chmod 600 auth/auth.key
+  openssl rsa -in auth.auth.key -pubout > auth/auth.pub
 fi
 
 # Events
 if [ ! -f event/api/config/event.jwt ]; then
   $AUTH issue --scopes '{ "sca": ["admin"] }' --sub 'event' > event/api/config/event.jwt
 fi
-cp auth/api/config/auth.pub event/api/config/auth.pub
+cp auth/auth.pub event/api/config/auth.pub
 
 # Amaretti
 if [ ! -f amaretti/config/amaretti.jwt ]; then
-  $AUTH issue --scopes '{ "auth": ["admin"], "amaretti": ["admin"] }' --sub 'amaretti' > amaretti/config/amaretti.jwt
+  $AUTH issue --scopes '{ "auth": ["admin"], "amaretti": ["admin"], "profile": ["admin"] }' --sub 'amaretti' > amaretti/config/amaretti.jwt
 fi
-cp auth/api/config/auth.pub amaretti/config/auth.pub
+cp auth/auth.pub amaretti/config/auth.pub
 
 # Warehouse
 if [ ! -f warehouse/api/config/warehouse.jwt ]; then
@@ -57,7 +56,15 @@ if [ ! -f warehouse/api/config/configEncrypt.key ]; then
   openssl genrsa -out warehouse/api/config/configEncrypt.key 2048
   chmod 600 warehouse/api/config/configEncrypt.key
 fi
-cp auth/api/config/auth.pub warehouse/api/config/auth.pub
+cp auth/auth.pub warehouse/api/config/auth.pub
+
+# ezBIDS
+if [ ! -f ezbids/api/auth.key ]; then
+  openssl genrsa -out ezbids/api/ezbids.key 2048
+  chmod 600 ezbids/api/ezbids.key
+  openssl rsa -in ezbids/api/ezbids.key -pubout > ezbids/api/ezbids.pub
+fi
+cp auth/auth.pub ezbids/api/auth.pub
 
 # Archive
 mkdir -p archive/.ssh
