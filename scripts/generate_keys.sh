@@ -1,34 +1,53 @@
 #!/bin/sh
+
 set -ex
 
+THIS=$(readlink -f "$0")
+THISDIR=$(dirname "$THIS")
 
-echo "RUNNING"
+cd $THISDIR/..
 
-#if [[ "$@" == *--wipe* ]]; then
-#  rm -f auth/auth.key
-#  rm -f auth/auth.pub
-#  rm -f event/api/config/auth.pub
-#  rm -f event/api/config/event.jwt
-#  rm -f amaretti/config/amaretti.jwt
-#  rm -f amaretti/config/auth.pub
-#  rm -f warehouse/api/config/auth.pub
-#  rm -f warehouse/api/config/configEncrypt.key
-#  rm -f warehouse/api/config/warehouse.jwt
-#  rm -f warehouse/api/config/warehouse.key
-#  rm -f warehouse/api/config/warehouse.pub
-#  rm -f ezbids/api/auth.pub
-#  rm -f ezbids/api/ezbids.pub
-#  rm -f archive/.ssh/configEncrypt.key
-#  exit 0
-#fi
+WIPE=false
+for i in "$@"; do
+  case $i in
+    --wipe)
+      WIPE=true
+      shift
+      ;;
+    -*|--*)
+      echo "Unknown option $i"
+      exit 1
+      ;;
+    *)
+      ;;
+  esac
+done
 
-AUTH="/app/dist/main.js"
+if $WIPE; then
+  rm -f auth/auth.key
+  rm -f auth/auth.pub
+  rm -f event/api/config/auth.pub
+  rm -f event/api/config/event.jwt
+  rm -f amaretti/config/amaretti.jwt
+  rm -f amaretti/config/auth.pub
+  rm -f warehouse/api/config/auth.pub
+  rm -f warehouse/api/config/configEncrypt.key
+  rm -f warehouse/api/config/warehouse.jwt
+  rm -f warehouse/api/config/warehouse.key
+  rm -f warehouse/api/config/warehouse.pub
+  rm -f ezbids/api/auth.pub
+  rm -f ezbids/api/ezbids.pub
+  rm -f archive/.ssh/configEncrypt.key
+  exit 0
+fi
+
+AUTH="node /app/dist/cli.js"
 
 # Auth
 if [ ! -f auth/auth.key ]; then
   openssl genrsa -out auth/auth.key 2048
   chmod 600 auth/auth.key
-  openssl rsa -in auth.auth.key -pubout > auth/auth.pub
+  openssl rsa -in auth/auth.key -pubout > auth/auth.pub
 fi
 
 # Events

@@ -102,28 +102,12 @@ services:
     volumes:
       - ./:/brainlife-dev
       - ./auth:/app
+      - /app/node_modules
     depends_on:
       mongodb:
         condition: service_healthy
-    restart: on-failure
-    working_dir: /brainlife-dev
-    entrypoint: /brainlife-dev/scripts/generate_keys.sh
-    environment:
-      - ORCID_AUTHORIZATION_URL=https://sandbox.orcid.org/oauth/authorize
-      - ORCID_CLIENT_ID=*client_id*
-      - ORCID_CLIENT_SECRET=*secret*
-      - ORCID_CALLBACK_URL=http://www.localhost:8080/api/auth/orcid/callback
-      - ORCID_TOKEN_URL=https://sandbox.orcid.org/oauth/token
-      - DB_URL_CLI=mongodb://localhost:27017/auth
-      - DB_URL=mongodb://brainlife_mongodb/auth
-      - GITHUB_CLIENT_ID=*client_id*
-      - GITHUB_CLIENT_SECRET=*secret*
-      - GITHUB_CALLBACK_URL=http://localhost:8080/api/auth/github/callback
-      - GOOGLE_CLIENT_ID=792164204994-7cskc60ut26v2e26sa0pt7trsffj2h7f.apps.googleusercontent.com
-      - GOOGLE_CLIENT_SECRET=*secret*
-      - GOOGLE_CALLBACK_URL=http://localhost:8080/api/auth/google/callback
-      - RABBITMQ_URL=amqp://guest:guest@brainlife_rabbitmq:5672/brainlife
-      - RABBITMQ_URL_CMD=amqp://guest:guest@localhost:5672/brainlife?heartbeat=30
+    restart: 'no'
+    command: /brainlife-dev/scripts/generate_keys.sh
 
   auth-api:
     container_name: brainlife_auth-api
