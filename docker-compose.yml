@@ -116,6 +116,7 @@ services:
     build: ./auth
     image: brainlife_auth
     volumes:
+      - ./:/brainlife-dev
       - ./auth:/app
       - /app/node_modules
     ports:
@@ -288,7 +289,7 @@ services:
     build: ./warehouse/ui
     image: brainlife_warehouse-ui
     volumes:
-      - ./warehouse/ui:/ui
+      - ./warehouse/ui:/app
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
       interval: 15s
